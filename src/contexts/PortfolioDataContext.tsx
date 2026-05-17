@@ -64,12 +64,42 @@ export interface EducationItem {
   year: string;
 }
 
+export interface SocialLink {
+  label: string;
+  url: string;
+}
+
 export interface ContactData {
   ctaLabel: string;
   ctaHeading: string;
   email: string;
   availabilityText: string;
-  socialLinks: string[];
+  socialLinks: SocialLink[];
+}
+
+export interface ResumeSkillCategory {
+  category: string;
+  items: string[];
+}
+
+export interface ResumeCertification {
+  title: string;
+  issuer: string;
+  date: string;
+}
+
+export interface ResumeData {
+  bioName: string;
+  bioParagraph1: string;
+  bioParagraph2: string;
+  profileImage: string;
+  location: string;
+  cvUrl: string;
+  formHeading: string;
+  formSubtext: string;
+  formspreeId: string;
+  skillColumns: ResumeSkillCategory[][];
+  certifications: ResumeCertification[];
 }
 
 export interface HeroSettingsData {
@@ -145,6 +175,9 @@ interface PortfolioContextType {
   // Resume.tsx — replaces: const EDUCATION = [...]
   education: EducationItem[];
 
+  // Resume.tsx — replaces hardcoded bio, skills, certifications
+  resumeData: ResumeData;
+
   loading: boolean;
   error: string | null;
   refetch: () => void;
@@ -179,7 +212,12 @@ const DEFAULT_CONTEXT: PortfolioContextType = {
     ctaHeading: "Let's build something.",
     email: 'hello@michaelsmith.com',
     availabilityText: 'Available for projects',
-    socialLinks: ['Twitter', 'LinkedIn', 'Dribbble', 'GitHub'],
+    socialLinks: [
+      { label: 'Twitter', url: '#' },
+      { label: 'LinkedIn', url: '#' },
+      { label: 'Dribbble', url: '#' },
+      { label: 'GitHub', url: '#' },
+    ],
   },
   heroData: {
     headlineName: 'Michael Smith',
@@ -210,6 +248,43 @@ const DEFAULT_CONTEXT: PortfolioContextType = {
     { id: 'master-hci-cmu', degree: 'Master of Human-Computer Interaction', school: 'Carnegie Mellon University', year: '2018 — 2019' },
     { id: 'bfa-risd', degree: 'BFA in Graphic Design', school: 'Rhode Island School of Design', year: '2014 — 2018' },
   ],
+  resumeData: {
+    bioName: 'Michael',
+    bioParagraph1: 'I am Michael, a designer and developer who finds joy in the intersection of logic and aesthetics. My work is driven by a deep fascination with how people interact with digital artifacts.',
+    bioParagraph2: 'Outside of client work, I spend my time exploring generative art, reading about cognitive psychology, and building small, opinionated tools that solve my own problems. I believe the best products are those that feel human and un-engineered.',
+    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=800',
+    location: 'Chicago, IL, USA',
+    cvUrl: '',
+    formHeading: 'Start a conversation.',
+    formSubtext: 'Feel free to reach out for collaborations or just a friendly hello.',
+    formspreeId: '',
+    skillColumns: [
+      [
+        { category: 'Languages', items: ['TypeScript / JS', 'Python', 'Go', 'Rust', 'C++'] },
+        { category: 'Design', items: ['UI/UX Design', 'Product Strategy', 'Figma', 'Branding', 'Interaction Architecture'] },
+      ],
+      [
+        { category: 'Frameworks', items: ['React / Next.js', 'Vue / Nuxt', 'SvelteKit', 'Express', 'NestJS'] },
+        { category: 'Libraries', items: ['GSAP', 'Three.js', 'Framer Motion', 'Tailwind CSS', 'D3.js'] },
+      ],
+      [
+        { category: 'Infrastructure', items: ['AWS', 'Vercel / Netlify', 'Docker', 'Kubernetes', 'Firebase'] },
+        { category: 'Tooling', items: ['Git', 'Webpack / Vite', 'Jest / Cypress', 'Postman', 'Storybook'] },
+        { category: 'AI Tools', items: ['OpenAI APIs', 'Anthropic', 'LangChain', 'Midjourney', 'Vector DBs'] },
+      ],
+    ],
+    certifications: [
+      { title: 'Google UX Design Professional', issuer: 'Coursera', date: '2021' },
+      { title: 'Advanced React Patterns', issuer: 'Frontend Masters', date: '2022' },
+      { title: 'Motion Design with After Effects', issuer: 'School of Motion', date: '2020' },
+      { title: 'Meta Front-End Developer', issuer: 'Meta', date: '2023' },
+      { title: 'AWS Certified Practitioner', issuer: 'Amazon', date: '2023' },
+      { title: 'Interaction Design Specialization', issuer: 'IDF', date: '2022' },
+      { title: 'Human-Computer Interaction', issuer: 'Stanford Online', date: '2021' },
+      { title: 'Full-Stack Web Development', issuer: 'Udacity', date: '2020' },
+      { title: 'Graphic Design Certification', issuer: 'California Institute of Arts', date: '2019' },
+    ],
+  },
   loading: true,
   error: null,
   refetch: () => {},
@@ -251,6 +326,9 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         { data: acadGallery },
         { data: activities },
         { data: activityLinks },
+        { data: resumeSettings },
+        { data: resumeSkills },
+        { data: resumeCertifications },
       ] = await Promise.all([
         supabase.from('site_settings').select('*').single(),
         supabase.from('hero_settings').select('*').single(),
@@ -277,6 +355,9 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         supabase.from('academic_gallery').select('*').order('sort_order'),
         supabase.from('activities').select('*').order('sort_order'),
         supabase.from('activity_links').select('*').order('sort_order'),
+        supabase.from('resume_settings').select('*').single(),
+        supabase.from('resume_skills').select('*').order('sort_order'),
+        supabase.from('resume_certifications').select('*').order('sort_order'),
       ]);
 
       // ── Hero Settings (was fetched but DISCARDED — now mapped!) ────────────
@@ -342,8 +423,8 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
 
       // ── Contact ───────────────────────────────────────────────────────────
       const socialLinksRaw = contactSettings?.social_links;
-      const socialLinks = Array.isArray(socialLinksRaw)
-        ? socialLinksRaw.map((s: any) => s.label)
+      const socialLinks: SocialLink[] = Array.isArray(socialLinksRaw)
+        ? socialLinksRaw.map((s: any) => ({ label: s.label || '', url: s.url || '#' }))
         : DEFAULT_CONTEXT.contact.socialLinks;
 
       const contact: ContactData = contactSettings
@@ -508,6 +589,39 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
           }))
         : DEFAULT_CONTEXT.education;
 
+      // ── Resume Data ─────────────────────────────────────────────────────
+      let resumeData: ResumeData = DEFAULT_CONTEXT.resumeData;
+      if (resumeSettings) {
+        // Build skill columns: grouped by column_index
+        const skillCols: ResumeSkillCategory[][] = [[], [], []];
+        if (resumeSkills && resumeSkills.length > 0) {
+          for (const s of resumeSkills) {
+            const colIdx = Math.min(s.column_index || 0, 2);
+            if (!skillCols[colIdx]) skillCols[colIdx] = [];
+            const items = Array.isArray(s.items) ? s.items : JSON.parse(s.items || '[]');
+            skillCols[colIdx].push({ category: s.category, items });
+          }
+        }
+
+        const certs: ResumeCertification[] = (resumeCertifications && resumeCertifications.length > 0)
+          ? resumeCertifications.map((c: any) => ({ title: c.title, issuer: c.issuer, date: c.date }))
+          : DEFAULT_CONTEXT.resumeData.certifications;
+
+        resumeData = {
+          bioName: resumeSettings.bio_name || DEFAULT_CONTEXT.resumeData.bioName,
+          bioParagraph1: resumeSettings.bio_paragraph1 || DEFAULT_CONTEXT.resumeData.bioParagraph1,
+          bioParagraph2: resumeSettings.bio_paragraph2 || DEFAULT_CONTEXT.resumeData.bioParagraph2,
+          profileImage: resumeSettings.profile_image || DEFAULT_CONTEXT.resumeData.profileImage,
+          location: resumeSettings.location || DEFAULT_CONTEXT.resumeData.location,
+          cvUrl: resumeSettings.cv_url || '',
+          formHeading: resumeSettings.form_heading || DEFAULT_CONTEXT.resumeData.formHeading,
+          formSubtext: resumeSettings.form_subtext || DEFAULT_CONTEXT.resumeData.formSubtext,
+          formspreeId: resumeSettings.formspree_id || '',
+          skillColumns: skillCols.some(col => col.length > 0) ? skillCols : DEFAULT_CONTEXT.resumeData.skillColumns,
+          certifications: certs,
+        };
+      }
+
       setCtx({
         roles,
         navLinks: resolvedNavLinks,
@@ -526,6 +640,7 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         academicsMap,
         allProjects,
         education,
+        resumeData,
         loading: false,
         error: null,
       });
@@ -549,7 +664,8 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
       'project_metrics', 'project_visuals', 'journal_entries', 'journal_content',
       'journal_tags', 'experiences', 'experience_responsibilities', 'experience_technologies',
       'experience_metrics', 'experience_gallery', 'academics', 'academic_activities',
-      'academic_metrics', 'academic_gallery', 'activities', 'activity_links'
+      'academic_metrics', 'academic_gallery', 'activities', 'activity_links',
+      'resume_settings', 'resume_skills', 'resume_certifications'
     ];
 
     const channels = WATCHED_TABLES.map(table =>

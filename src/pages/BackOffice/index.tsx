@@ -12,12 +12,13 @@ import ActivitiesEditor from './sections/ActivitiesEditor';
 import StatsEditor from './sections/StatsEditor';
 import ContactEditor from './sections/ContactEditor';
 import NavigationEditor from './sections/NavigationEditor';
+import ResumeEditor from './sections/ResumeEditor';
 import { Menu, X, ExternalLink, RefreshCw, Layout } from 'lucide-react';
 
 export type BOSection =
   | 'site-settings' | 'hero' | 'projects' | 'journal'
   | 'experience' | 'academic' | 'activities'
-  | 'stats' | 'navigation' | 'contact';
+  | 'stats' | 'navigation' | 'contact' | 'resume';
 
 export default function BackOffice() {
   const [session, setSession] = useState<any>(null);
@@ -88,6 +89,7 @@ export default function BackOffice() {
     'stats': <StatsEditor onSaved={refreshIframe} />,
     'navigation': <NavigationEditor onSaved={refreshIframe} />,
     'contact': <ContactEditor onSaved={refreshIframe} />,
+    'resume': <ResumeEditor onSaved={refreshIframe} />,
   };
 
   return (

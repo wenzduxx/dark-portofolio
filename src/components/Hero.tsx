@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
+import { Link } from 'react-router-dom';
 import Aurora from './Aurora';
 import ShinyText from './ShinyText';
 import GlassSurface from './GlassSurface';
@@ -74,21 +75,21 @@ export function Hero() {
         </p>
 
         <div className="blur-in flex flex-wrap items-center justify-center gap-4">
-          <button className="group relative rounded-full text-sm hover:scale-105 transition-all duration-300">
+          <Link to="/work" className="group relative rounded-full text-sm hover:scale-105 transition-all duration-300">
             <span className="absolute inset-[-2px] rounded-full accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative px-7 py-3.5 rounded-full bg-text-primary group-hover:bg-bg text-bg group-hover:text-text-primary transition-colors duration-300 z-10 mx-[2px] my-[2px] w-[calc(100%-4px)] h-[calc(100%-4px)] flex items-center justify-center">
               {heroData.button1Text}
             </div>
-          </button>
+          </Link>
           
-          <button className="group relative rounded-full text-sm hover:scale-105 transition-all duration-300">
+          <a href={`mailto:${siteData.ownerEmail}`} className="group relative rounded-full text-sm hover:scale-105 transition-all duration-300">
             <span className="absolute inset-[-2px] rounded-full accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <GlassSurface width="fit-content" height="fit-content" borderRadius={30} opacity={0.2} blur={10}>
               <div className="relative px-7 py-3 rounded-full text-text-primary flex items-center justify-center">
                 {heroData.button2Text}
               </div>
             </GlassSurface>
-          </button>
+          </a>
         </div>
       </div>
 

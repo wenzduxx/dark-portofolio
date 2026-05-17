@@ -79,8 +79,14 @@ export function Contact() {
         <div className="w-full max-w-[1400px] mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-muted">
           <div className="flex items-center gap-6">
             {contact.socialLinks.map(link => (
-              <a key={link} href="#" className="hover:text-text-primary transition-colors">
-                {link}
+              <a
+                key={link.label}
+                href={link.url || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-text-primary transition-colors"
+              >
+                {link.label}
               </a>
             ))}
           </div>

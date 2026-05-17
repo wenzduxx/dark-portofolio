@@ -3,45 +3,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Link } from 'react-router-dom';
-import { Award, BookOpen, ChevronRight, Download, Mail, Send } from 'lucide-react';
+import { Award, BookOpen, ChevronRight, Download, Mail, Send, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react';
 import TextType from '../components/TextType';
 import Noise from '../components/Noise';
 import { usePortfolioData } from '../contexts/PortfolioDataContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const SKILL_COLUMNS = [
-  [
-    { category: "Languages", items: ["TypeScript / JS", "Python", "Go", "Rust", "C++"] },
-    { category: "Design", items: ["UI/UX Design", "Product Strategy", "Figma", "Branding", "Interaction Architecture"] }
-  ],
-  [
-    { category: "Frameworks", items: ["React / Next.js", "Vue / Nuxt", "SvelteKit", "Express", "NestJS"] },
-    { category: "Libraries", items: ["GSAP", "Three.js", "Framer Motion", "Tailwind CSS", "D3.js"] }
-  ],
-  [
-    { category: "Infrastructure", items: ["AWS", "Vercel / Netlify", "Docker", "Kubernetes", "Firebase"] },
-    { category: "Tooling", items: ["Git", "Webpack / Vite", "Jest / Cypress", "Postman", "Storybook"] },
-    { category: "AI Tools", items: ["OpenAI APIs", "Anthropic", "LangChain", "Midjourney", "Vector DBs"] }
-  ]
-];
-
-const ALL_CERTIFICATIONS = [
-  { title: "Google UX Design Professional", issuer: "Coursera", date: "2021" },
-  { title: "Advanced React Patterns", issuer: "Frontend Masters", date: "2022" },
-  { title: "Motion Design with After Effects", issuer: "School of Motion", date: "2020" },
-  { title: "Meta Front-End Developer", issuer: "Meta", date: "2023" },
-  { title: "AWS Certified Practitioner", issuer: "Amazon", date: "2023" },
-  { title: "Interaction Design Specialization", issuer: "IDF", date: "2022" },
-  { title: "Human-Computer Interaction", issuer: "Stanford Online", date: "2021" },
-  { title: "Full-Stack Web Development", issuer: "Udacity", date: "2020" },
-  { title: "Graphic Design Certification", issuer: "California Institute of Arts", date: "2019" }
-];
-
 export default function Resume() {
-  const { education: EDUCATION } = usePortfolioData();
+  const { education: EDUCATION, resumeData, contact } = usePortfolioData();
+  const SKILL_COLUMNS = resumeData.skillColumns;
+  const ALL_CERTIFICATIONS = resumeData.certifications;
+
   const [certIndex, setCertIndex] = useState(0);
   const [skillIndices, setSkillIndices] = useState([0, 0, 0]);
+
+  // Contact form state
+  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const [formError, setFormError] = useState('');
 
   const handleSentenceComplete = (colIndex: number, sentenceIndex: number) => {
     setSkillIndices(prev => {
@@ -52,11 +32,12 @@ export default function Resume() {
   };
 
   useEffect(() => {
+    if (ALL_CERTIFICATIONS.length === 0) return;
     const certTimer = setInterval(() => {
       setCertIndex((prev) => (prev + 3 >= ALL_CERTIFICATIONS.length ? 0 : prev + 3));
     }, 6000);
     return () => clearInterval(certTimer);
-  }, []);
+  }, [ALL_CERTIFICATIONS.length]);
 
   const visibleCerts = ALL_CERTIFICATIONS.slice(certIndex, certIndex + 3);
 
@@ -78,6 +59,65 @@ export default function Resume() {
 
     return () => ctx.revert();
   }, []);
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+      setFormError('Please fill in all required fields.');
+      return;
+    }
+
+    const formspreeId = resumeData.formspreeId;
+
+    if (!formspreeId) {
+      // Fallback to mailto:
+      const mailtoBody = `Name: ${formData.name}%0D%0AEmail: ${formData.email}%0D%0ASubject: ${formData.subject}%0D%0A%0D%0A${formData.message}`;
+      const mailtoUrl = `mailto:${contact.email}?subject=${encodeURIComponent(formData.subject || 'Contact from Portfolio')}&body=${mailtoBody}`;
+      window.open(mailtoUrl, '_blank');
+      setFormStatus('success');
+      setTimeout(() => setFormStatus('idle'), 3000);
+      return;
+    }
+
+    // Formspree submission
+    setFormStatus('sending');
+    setFormError('');
+
+    try {
+      const response = await fetch(`https://formspree.io/f/${formspreeId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+        }),
+      });
+
+      if (response.ok) {
+        setFormStatus('success');
+        setFormData({ name: '', email: '', subject: '', message: '' });
+        setTimeout(() => setFormStatus('idle'), 4000);
+      } else {
+        const data = await response.json();
+        setFormError(data?.errors?.[0]?.message || 'Failed to send message. Please try again.');
+        setFormStatus('error');
+        setTimeout(() => setFormStatus('idle'), 4000);
+      }
+    } catch {
+      setFormError('Network error. Please try again.');
+      setFormStatus('error');
+      setTimeout(() => setFormStatus('idle'), 4000);
+    }
+  };
+
+  const setField = (k: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData(prev => ({ ...prev, [k]: e.target.value }));
+    if (formError) setFormError('');
+  };
 
   return (
     <div className="bg-bg min-h-screen pt-32 pb-20 relative">
@@ -116,7 +156,7 @@ export default function Resume() {
               
               <div className="w-full h-full rounded-full overflow-hidden border border-stroke bg-surface relative grayscale hover:grayscale-0 transition-all duration-1000">
                  <img 
-                   src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=800" 
+                   src={resumeData.profileImage}
                    alt="Profile" 
                    className="w-full h-full object-cover"
                  />
@@ -128,22 +168,39 @@ export default function Resume() {
           <div className="md:col-span-12 lg:col-span-8">
             <div className="text-xl md:text-2xl text-text-primary/80 leading-relaxed max-w-3xl">
               <p className="mb-8">
-                I am Michael, a designer and developer who finds joy in the intersection of logic and aesthetics. My work is driven by a deep fascination with how people interact with digital artifacts.
+                {resumeData.bioParagraph1}
               </p>
               <p className="mb-8">
-                Outside of client work, I spend my time exploring generative art, reading about cognitive psychology, and building small, opinionated tools that solve my own problems. I believe the best products are those that feel human and un-engineered.
+                {resumeData.bioParagraph2}
               </p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-12 mt-12 pt-12 border-t border-stroke">
                 <div>
                   <div className="text-[10px] text-muted uppercase tracking-[0.2em] mb-1">Current Location</div>
-                  <div className="text-lg text-text-primary">Chicago, IL, USA</div>
+                  <div className="text-lg text-text-primary">{resumeData.location}</div>
                 </div>
-                <button className="group relative rounded-full text-sm hover:scale-105 transition-all duration-300">
-                  <span className="absolute inset-[-2px] rounded-full accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="relative px-8 py-3 rounded-full bg-text-primary group-hover:bg-bg text-bg group-hover:text-text-primary transition-colors duration-300 z-10 flex items-center gap-2">
-                    Download CV <Download className="w-4 h-4" />
-                  </div>
-                </button>
+                {resumeData.cvUrl ? (
+                  <a 
+                    href={resumeData.cvUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="group relative rounded-full text-sm hover:scale-105 transition-all duration-300"
+                  >
+                    <span className="absolute inset-[-2px] rounded-full accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="relative px-8 py-3 rounded-full bg-text-primary group-hover:bg-bg text-bg group-hover:text-text-primary transition-colors duration-300 z-10 flex items-center gap-2">
+                      Download CV <Download className="w-4 h-4" />
+                    </div>
+                  </a>
+                ) : (
+                  <a 
+                    href={`mailto:${contact.email}`}
+                    className="group relative rounded-full text-sm hover:scale-105 transition-all duration-300"
+                  >
+                    <span className="absolute inset-[-2px] rounded-full accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="relative px-8 py-3 rounded-full bg-text-primary group-hover:bg-bg text-bg group-hover:text-text-primary transition-colors duration-300 z-10 flex items-center gap-2">
+                      Get in Touch <ExternalLink className="w-4 h-4" />
+                    </div>
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -245,7 +302,7 @@ export default function Resume() {
                       transition={{ duration: 0.3 }}
                     >
                       <ul className="space-y-4">
-                        {column[skillIndices[i]].items.map((skill, j) => (
+                        {column[skillIndices[i]]?.items.map((skill, j) => (
                           <li key={j} className="flex items-center gap-2 text-base md:text-lg text-text-primary group cursor-default whitespace-nowrap">
                             <ChevronRight className="w-3 h-3 text-muted group-hover:text-white group-hover:translate-x-1 transition-all" />
                             {skill}
@@ -266,25 +323,59 @@ export default function Resume() {
             <div className="inline-flex p-3 rounded-full bg-stroke/30 mb-6">
               <Mail className="w-6 h-6 text-text-primary/70" />
             </div>
-            <h2 className="text-4xl md:text-5xl font-display italic text-text-primary mb-4">Start a conversation.</h2>
-            <p className="text-muted">Feel free to reach out for collaborations or just a friendly hello.</p>
+            <h2 className="text-4xl md:text-5xl font-display italic text-text-primary mb-4">{resumeData.formHeading}</h2>
+            <p className="text-muted">{resumeData.formSubtext}</p>
           </div>
+
+          {/* Status Messages */}
+          <AnimatePresence mode="wait">
+            {formStatus === 'success' && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 rounded-2xl px-6 py-4 mb-8"
+              >
+                <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+                <span className="text-green-400">Message sent successfully! I'll get back to you soon.</span>
+              </motion.div>
+            )}
+            {formStatus === 'error' && formError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-2xl px-6 py-4 mb-8"
+              >
+                <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+                <span className="text-red-400">{formError}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
           
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleFormSubmit}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-xs text-muted uppercase tracking-widest ml-4">Full Name</label>
+                <label className="text-xs text-muted uppercase tracking-widest ml-4">Full Name *</label>
                 <input 
                   type="text" 
+                  name="name"
+                  value={formData.name}
+                  onChange={setField('name')}
                   placeholder="John Doe" 
+                  required
                   className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary focus:border-white transition-colors outline-none" 
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs text-muted uppercase tracking-widest ml-4">Email Address</label>
+                <label className="text-xs text-muted uppercase tracking-widest ml-4">Email Address *</label>
                 <input 
                   type="email" 
+                  name="email"
+                  value={formData.email}
+                  onChange={setField('email')}
                   placeholder="john@example.com" 
+                  required
                   className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary focus:border-white transition-colors outline-none" 
                 />
               </div>
@@ -293,23 +384,48 @@ export default function Resume() {
                <label className="text-xs text-muted uppercase tracking-widest ml-4">Subject</label>
                 <input 
                   type="text" 
+                  name="subject"
+                  value={formData.subject}
+                  onChange={setField('subject')}
                   placeholder="How can I help?" 
                   className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary focus:border-white transition-colors outline-none" 
                 />
             </div>
             <div className="space-y-2">
-              <label className="text-xs text-muted uppercase tracking-widest ml-4">Message</label>
+              <label className="text-xs text-muted uppercase tracking-widest ml-4">Message *</label>
               <textarea 
                 rows={5}
+                name="message"
+                value={formData.message}
+                onChange={setField('message')}
                 placeholder="Tell me about your project..." 
+                required
                 className="w-full bg-bg border border-stroke rounded-[2rem] px-6 py-6 text-text-primary focus:border-white transition-colors outline-none resize-none" 
               />
             </div>
             
-            <button className="w-full group relative rounded-full text-lg hover:scale-[1.02] transition-all duration-300 overflow-hidden">
+            <button 
+              type="submit"
+              disabled={formStatus === 'sending'}
+              className="w-full group relative rounded-full text-lg hover:scale-[1.02] transition-all duration-300 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+            >
                <span className="absolute inset-0 accent-gradient opacity-0 group-hover:opacity-100 transition-opacity" />
                <div className="relative w-full h-full bg-text-primary hover:bg-transparent text-bg hover:text-text-primary py-5 rounded-full flex items-center justify-center gap-3 transition-all z-10 transition-colors duration-300">
-                  Send Message <Send className="w-4 h-4" />
+                 {formStatus === 'sending' ? (
+                   <>
+                     <div className="w-4 h-4 border-2 border-bg border-t-transparent rounded-full animate-spin" />
+                     Sending...
+                   </>
+                 ) : formStatus === 'success' ? (
+                   <>
+                     <CheckCircle2 className="w-4 h-4" />
+                     Sent!
+                   </>
+                 ) : (
+                   <>
+                     Send Message <Send className="w-4 h-4" />
+                   </>
+                 )}
                </div>
             </button>
           </form>
