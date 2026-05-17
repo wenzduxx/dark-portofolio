@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoadingScreen } from './components/LoadingScreen';
 import { Navbar } from './components/Navbar';
 import { Contact } from './components/Contact';
@@ -38,7 +38,8 @@ function PortfolioApp() {
           <Route path="/activity/:id" element={<ActivityDetail />} />
           <Route path="/experience/:id" element={<ExperienceDetail />} />
           <Route path="/academic/:id" element={<AcademicDetail />} />
-          {/* Fallback path could be added here */}
+          {/* Catch-all: redirect unknown URLs to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 

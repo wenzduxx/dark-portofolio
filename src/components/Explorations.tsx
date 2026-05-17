@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowUpRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { usePortfolioData } from '../contexts/PortfolioDataContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,6 +17,7 @@ const EXPLORATIONS = [
 ];
 
 export function Explorations() {
+  const { contact } = usePortfolioData();
   const sectionRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const column1Ref = useRef<HTMLDivElement>(null);
@@ -87,12 +90,27 @@ export function Explorations() {
             Daily experiments, 3D renders, and interaction ideas that didn't make it to production.
           </p>
           
-          <button className="group relative rounded-full text-sm hover:scale-105 transition-all duration-300">
-            <span className="absolute inset-[-2px] rounded-full accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative px-7 py-3.5 rounded-full bg-surface border border-stroke text-text-primary flex items-center justify-center gap-2 group-hover:bg-bg/90 backdrop-blur-sm z-10 mx-[2px] my-[2px] w-[calc(100%-4px)] h-[calc(100%-4px)]">
-               Dribbble <ArrowUpRight className="w-4 h-4 text-muted group-hover:text-text-primary transition-colors" />
-            </div>
-          </button>
+          {(() => {
+            const dribbbleLink = contact.socialLinks.find(s => s.label.toLowerCase().includes('dribbble'));
+            if (dribbbleLink && dribbbleLink.url && dribbbleLink.url !== '#') {
+              return (
+                <a href={dribbbleLink.url} target="_blank" rel="noopener noreferrer" className="group relative rounded-full text-sm hover:scale-105 transition-all duration-300">
+                  <span className="absolute inset-[-2px] rounded-full accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="relative px-7 py-3.5 rounded-full bg-surface border border-stroke text-text-primary flex items-center justify-center gap-2 group-hover:bg-bg/90 backdrop-blur-sm z-10 mx-[2px] my-[2px] w-[calc(100%-4px)] h-[calc(100%-4px)]">
+                     Dribbble <ArrowUpRight className="w-4 h-4 text-muted group-hover:text-text-primary transition-colors" />
+                  </div>
+                </a>
+              );
+            }
+            return (
+              <Link to="/work" className="group relative rounded-full text-sm hover:scale-105 transition-all duration-300">
+                <span className="absolute inset-[-2px] rounded-full accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative px-7 py-3.5 rounded-full bg-surface border border-stroke text-text-primary flex items-center justify-center gap-2 group-hover:bg-bg/90 backdrop-blur-sm z-10 mx-[2px] my-[2px] w-[calc(100%-4px)] h-[calc(100%-4px)]">
+                   View Work <ArrowUpRight className="w-4 h-4 text-muted group-hover:text-text-primary transition-colors" />
+                </div>
+              </Link>
+            );
+          })()}
         </div>
       </div>
 

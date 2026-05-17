@@ -33,12 +33,12 @@ export function Journal() {
             </p>
           </div>
           
-          <button className="hidden md:inline-flex group relative rounded-full text-sm shrink-0 hover:scale-105 transition-all duration-300">
+          <Link to="/work" className="hidden md:inline-flex group relative rounded-full text-sm shrink-0 hover:scale-105 transition-all duration-300">
             <span className="absolute inset-[-2px] rounded-full accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative px-6 py-3 rounded-full bg-surface border border-stroke text-text-primary flex items-center gap-2 group-hover:bg-bg/90 backdrop-blur-sm z-10 mx-[2px] my-[2px] w-[calc(100%-4px)] h-[calc(100%-4px)]">
                View all articles <ArrowRight className="w-4 h-4 text-muted group-hover:text-text-primary transition-colors" />
             </div>
-          </button>
+          </Link>
         </motion.div>
 
         {/* List */}
@@ -86,12 +86,12 @@ export function Journal() {
         
         {/* Mobile View All Button */}
         <div className="mt-8 flex justify-center md:hidden">
-          <button className="group relative rounded-full text-sm hover:scale-105 transition-all duration-300 w-full">
+          <Link to="/work" className="group relative rounded-full text-sm hover:scale-105 transition-all duration-300 w-full">
             <span className="absolute inset-[-2px] rounded-full accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative px-6 py-3 rounded-full bg-surface border border-stroke text-text-primary flex items-center justify-center gap-2 group-hover:bg-bg/90 backdrop-blur-sm z-10 mx-[2px] my-[2px] w-[calc(100%-4px)] h-[calc(100%-4px)]">
                View all articles <ArrowRight className="w-4 h-4 text-muted group-hover:text-text-primary transition-colors" />
             </div>
-          </button>
+          </Link>
         </div>
       </div>
     </section>

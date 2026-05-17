@@ -142,7 +142,12 @@ export default function Resume() {
               <span className="text-xs text-muted uppercase tracking-[0.3em]">About Me</span>
             </motion.div>
             <h1 className="text-5xl md:text-7xl font-display italic text-text-primary leading-none mb-12">
-              A curious <span className="text-text-primary/40">mind.</span>
+              {(() => {
+                const words = resumeData.pageHeading.split(' ');
+                if (words.length <= 1) return resumeData.pageHeading;
+                const lastWord = words.pop();
+                return <>{words.join(' ')} <span className="text-text-primary/40">{lastWord}</span></>;
+              })()}
             </h1>
             
             <motion.div 

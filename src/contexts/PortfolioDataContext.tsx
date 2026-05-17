@@ -98,6 +98,7 @@ export interface ResumeData {
   formHeading: string;
   formSubtext: string;
   formspreeId: string;
+  pageHeading: string;
   skillColumns: ResumeSkillCategory[][];
   certifications: ResumeCertification[];
 }
@@ -177,6 +178,9 @@ interface PortfolioContextType {
 
   // Resume.tsx — replaces hardcoded bio, skills, certifications
   resumeData: ResumeData;
+
+  // Work.tsx — replaces: const CLIENTS = [...]
+  clients: string[];
 
   loading: boolean;
   error: string | null;
@@ -258,6 +262,7 @@ const DEFAULT_CONTEXT: PortfolioContextType = {
     formHeading: 'Start a conversation.',
     formSubtext: 'Feel free to reach out for collaborations or just a friendly hello.',
     formspreeId: '',
+    pageHeading: 'A curious mind.',
     skillColumns: [
       [
         { category: 'Languages', items: ['TypeScript / JS', 'Python', 'Go', 'Rust', 'C++'] },
@@ -285,6 +290,7 @@ const DEFAULT_CONTEXT: PortfolioContextType = {
       { title: 'Graphic Design Certification', issuer: 'California Institute of Arts', date: '2019' },
     ],
   },
+  clients: ['Apple', 'Nike', 'Vercel', 'Airbnb', 'Spotify', 'Meta', 'Tesla', 'Netflix'],
   loading: true,
   error: null,
   refetch: () => {},
@@ -329,6 +335,7 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         { data: resumeSettings },
         { data: resumeSkills },
         { data: resumeCertifications },
+        { data: clientsData },
       ] = await Promise.all([
         supabase.from('site_settings').select('*').single(),
         supabase.from('hero_settings').select('*').single(),
@@ -358,6 +365,7 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         supabase.from('resume_settings').select('*').single(),
         supabase.from('resume_skills').select('*').order('sort_order'),
         supabase.from('resume_certifications').select('*').order('sort_order'),
+        supabase.from('clients').select('*').order('sort_order'),
       ]);
 
       // ── Hero Settings (was fetched but DISCARDED — now mapped!) ────────────
@@ -617,10 +625,16 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
           formHeading: resumeSettings.form_heading || DEFAULT_CONTEXT.resumeData.formHeading,
           formSubtext: resumeSettings.form_subtext || DEFAULT_CONTEXT.resumeData.formSubtext,
           formspreeId: resumeSettings.formspree_id || '',
+          pageHeading: resumeSettings.page_heading || DEFAULT_CONTEXT.resumeData.pageHeading,
           skillColumns: skillCols.some(col => col.length > 0) ? skillCols : DEFAULT_CONTEXT.resumeData.skillColumns,
           certifications: certs,
         };
       }
+
+      // ── Clients ──────────────────────────────────────────────────────────
+      const clients = (clientsData && clientsData.length > 0)
+        ? clientsData.map((c: any) => c.name)
+        : DEFAULT_CONTEXT.clients;
 
       setCtx({
         roles,
@@ -641,6 +655,7 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         allProjects,
         education,
         resumeData,
+        clients,
         loading: false,
         error: null,
       });
@@ -665,7 +680,8 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
       'journal_tags', 'experiences', 'experience_responsibilities', 'experience_technologies',
       'experience_metrics', 'experience_gallery', 'academics', 'academic_activities',
       'academic_metrics', 'academic_gallery', 'activities', 'activity_links',
-      'resume_settings', 'resume_skills', 'resume_certifications'
+      'resume_settings', 'resume_skills', 'resume_certifications',
+      'clients'
     ];
 
     const channels = WATCHED_TABLES.map(table =>

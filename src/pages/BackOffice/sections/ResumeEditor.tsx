@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { BOCard, BOSectionHeader, BOField, BOInput, BOSaveButton, BOAlert, useSaveState } from '../components/BOUtils';
+import ImageUpload from '../components/ImageUpload';
 import { Plus, Trash2, Save, GripVertical } from 'lucide-react';
 
 interface SkillRow {
@@ -26,6 +27,7 @@ export default function ResumeEditor({ onSaved }: { onSaved?: () => void }) {
     bio_name: '', bio_paragraph1: '', bio_paragraph2: '',
     profile_image: '', location: '', cv_url: '',
     form_heading: '', form_subtext: '', formspree_id: '',
+    page_heading: '',
   });
   const [skills, setSkills] = useState<SkillRow[]>([]);
   const [certs, setCerts] = useState<CertRow[]>([]);
@@ -54,6 +56,7 @@ export default function ResumeEditor({ onSaved }: { onSaved?: () => void }) {
           form_heading: data.form_heading || '',
           form_subtext: data.form_subtext || '',
           formspree_id: data.formspree_id || '',
+          page_heading: data.page_heading || '',
         });
       }
     });
@@ -203,10 +206,12 @@ export default function ResumeEditor({ onSaved }: { onSaved?: () => void }) {
       <BOSectionHeader title="Resume / About" description="Edit the Resume page content: bio, profile image, skills, certifications, and contact form." />
       {error && <BOAlert message={error} />}
 
-      {/* Bio Section */}
       <BOCard>
         <h3 className="text-sm font-semibold text-[#e5e5e5] mb-4">About Me</h3>
         <div className="space-y-4">
+          <BOField label="Page Heading" hint='Main heading on the Resume page, e.g. "A curious mind."'>
+            <BOInput value={form.page_heading} onChange={set('page_heading')} placeholder="A curious mind." />
+          </BOField>
           <BOField label="Display Name" hint='e.g. "Michael" — used in "I am Michael, a..."'>
             <BOInput value={form.bio_name} onChange={set('bio_name')} placeholder="Michael" />
           </BOField>
@@ -217,16 +222,18 @@ export default function ResumeEditor({ onSaved }: { onSaved?: () => void }) {
             <BOInput value={form.bio_paragraph2} onChange={set('bio_paragraph2')} placeholder="Outside of client work..." rows={3} />
           </BOField>
           <div className="grid grid-cols-2 gap-4">
-            <BOField label="Profile Image URL">
-              <BOInput value={form.profile_image} onChange={set('profile_image')} placeholder="https://..." />
-            </BOField>
-            <BOField label="Location">
-              <BOInput value={form.location} onChange={set('location')} placeholder="Chicago, IL, USA" />
-            </BOField>
+            <div>
+              <ImageUpload value={form.profile_image} onChange={set('profile_image')} label="Profile Photo" />
+            </div>
+            <div className="space-y-4">
+              <BOField label="Location">
+                <BOInput value={form.location} onChange={set('location')} placeholder="Chicago, IL, USA" />
+              </BOField>
+              <BOField label="CV / Resume File URL" hint="Link to downloadable PDF. Leave empty to show 'Get in Touch' instead.">
+                <BOInput value={form.cv_url} onChange={set('cv_url')} placeholder="https://drive.google.com/..." />
+              </BOField>
+            </div>
           </div>
-          <BOField label="CV / Resume File URL" hint="Link to downloadable PDF. Leave empty to show 'Get in Touch' instead.">
-            <BOInput value={form.cv_url} onChange={set('cv_url')} placeholder="https://drive.google.com/..." />
-          </BOField>
         </div>
       </BOCard>
 

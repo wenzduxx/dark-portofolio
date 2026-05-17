@@ -9,10 +9,10 @@ import { usePortfolioData } from '../contexts/PortfolioDataContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const CLIENTS = ["Apple", "Nike", "Vercel", "Airbnb", "Spotify", "Meta", "Tesla", "Netflix"];
+
 
 export default function Work() {
-  const { allProjects: ALL_PROJECTS, experienceList, activitiesList } = usePortfolioData();
+  const { allProjects: ALL_PROJECTS, experienceList, activitiesList, clients: CLIENTS } = usePortfolioData();
   const EXPERIENCE_LIST = experienceList;
   const ACTIVITIES_LIST = activitiesList;
   const pageRef = useRef<HTMLDivElement>(null);
@@ -262,6 +262,7 @@ export default function Work() {
       </section>
 
       {/* Clients Section */}
+      {CLIENTS.length > 0 && (
       <section className="max-w-[1200px] mx-auto pt-20 border-t border-stroke">
         <h2 className="text-xs text-muted uppercase tracking-[0.3em] mb-12 text-center">Trusted By</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16">
@@ -275,6 +276,7 @@ export default function Work() {
           ))}
         </div>
       </section>
+      )}
     </div>
   );
 }

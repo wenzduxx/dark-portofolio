@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { BOCard, BOSectionHeader, BOField, BOInput, BOSaveButton, BOAlert, useSaveState } from '../components/BOUtils';
+import ArrayEditor from '../components/ArrayEditor';
+import { Save } from 'lucide-react';
 
 export default function SiteSettingsSection({ onSaved }: { onSaved?: () => void }) {
   const { saving, saved, error, withSave, setError } = useSaveState();
@@ -9,11 +11,16 @@ export default function SiteSettingsSection({ onSaved }: { onSaved?: () => void 
     logo_initials: '', collection_label: '', seo_title: '', seo_description: ''
   });
   const [id, setId] = useState('');
+  const [clients, setClients] = useState<string[]>([]);
+  const [clientsSaving, setClientsSaving] = useState(false);
 
   useEffect(() => {
     supabase.from('site_settings').select('*').single().then(({ data, error: err }) => {
       if (err) { setError(err.message); return; }
       if (data) { setId(data.id); setForm({ ...data }); }
+    });
+    supabase.from('clients').select('*').order('sort_order').then(({ data }) => {
+      if (data) setClients(data.map((c: any) => c.name));
     });
   }, []);
 
@@ -76,6 +83,42 @@ export default function SiteSettingsSection({ onSaved }: { onSaved?: () => void 
       </BOCard>
 
       <BOSaveButton onClick={handleSave} loading={saving} saved={saved} />
+
+      <BOCard>
+        <ArrayEditor
+          label="Trusted By / Clients"
+          items={clients}
+          onChange={setClients}
+          placeholder="e.g. Apple"
+          addLabel="Add client"
+        />
+        <div className="mt-4">
+          <button
+            onClick={async () => {
+              setClientsSaving(true);
+              try {
+                await supabase.from('clients').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                if (clients.filter(Boolean).length > 0) {
+                  const { error: err } = await supabase.from('clients').insert(
+                    clients.filter(Boolean).map((name, i) => ({ name, sort_order: i }))
+                  );
+                  if (err) setError(err.message);
+                }
+                onSaved?.();
+              } catch (e: any) {
+                setError(e.message);
+              } finally {
+                setClientsSaving(false);
+              }
+            }}
+            disabled={clientsSaving}
+            className="flex items-center gap-1.5 text-xs bg-[#84CC16] hover:bg-[#76b814] text-black font-medium px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <Save className="w-3.5 h-3.5" />
+            {clientsSaving ? 'Saving...' : 'Save clients'}
+          </button>
+        </div>
+      </BOCard>
     </div>
   );
 }
