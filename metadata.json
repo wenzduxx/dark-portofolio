@@ -1,0 +1,6 @@
+{
+  "name": "Dark Portfolio Landing Page",
+  "description": "A single-page dark portfolio landing page using React, Vite, Tailwind CSS, GSAP, Framer Motion, and hls.js.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

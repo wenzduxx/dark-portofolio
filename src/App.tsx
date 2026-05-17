@@ -1,0 +1,65 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { LoadingScreen } from './components/LoadingScreen';
+import { Navbar } from './components/Navbar';
+import { Contact } from './components/Contact';
+import Home from './pages/Home';
+import Work from './pages/Work';
+import Resume from './pages/Resume';
+import ProjectDetail from './pages/ProjectDetail';
+import JournalDetail from './pages/JournalDetail';
+import ActivityDetail from './pages/ActivityDetail';
+import ExperienceDetail from './pages/ExperienceDetail';
+import AcademicDetail from './pages/AcademicDetail';
+import BackOffice from './pages/BackOffice/index';
+import { PortfolioDataProvider } from './contexts/PortfolioDataContext';
+
+function PortfolioApp() {
+  const [isLoading, setIsLoading] = useState(true);
+
+  return (
+    <div className="bg-bg min-h-screen selection:bg-accent selection:text-bg">
+      {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
+      
+      {!isLoading && <Navbar />}
+
+      <main className={`transition-opacity duration-1000 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/work" element={<Work />} />
+          <Route path="/resume" element={<Resume />} />
+          <Route path="/project/:id" element={<ProjectDetail />} />
+          <Route path="/journal/:id" element={<JournalDetail />} />
+          <Route path="/activity/:id" element={<ActivityDetail />} />
+          <Route path="/experience/:id" element={<ExperienceDetail />} />
+          <Route path="/academic/:id" element={<AcademicDetail />} />
+          {/* Fallback path could be added here */}
+        </Routes>
+      </main>
+
+      {!isLoading && <Contact />}
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <Routes>
+        {/* Back Office — standalone, no portfolio wrapper */}
+        <Route path="/bts-porto/*" element={<BackOffice />} />
+        {/* Portfolio — wrapped in data provider */}
+        <Route path="/*" element={
+          <PortfolioDataProvider>
+            <PortfolioApp />
+          </PortfolioDataProvider>
+        } />
+      </Routes>
+    </Router>
+  );
+}
