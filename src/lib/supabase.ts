@@ -1,10 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('[Supabase] Missing env vars. Data will fall back to static files.');
+if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-project-ref')) {
+  console.error('[Supabase] ⚠️ ENV VARS NOT SET! Please copy .env.example to .env and fill in your Supabase credentials. Data will show as static dummy data until this is fixed.');
 }
 
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');

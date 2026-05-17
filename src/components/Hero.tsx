@@ -11,12 +11,13 @@ export function Hero() {
   const { roles: ROLES } = usePortfolioData();
 
   useEffect(() => {
+    if (ROLES.length === 0) return;
     // Rotating roles every 2s
     const roleInterval = setInterval(() => {
       setRoleIndex((prev) => (prev + 1) % ROLES.length);
     }, 2000);
     return () => clearInterval(roleInterval);
-  }, []);
+  }, [ROLES.length]);
 
   useEffect(() => {
     // GSAP Entrance Animation

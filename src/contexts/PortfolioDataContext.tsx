@@ -121,6 +121,7 @@ interface PortfolioContextType {
   education: EducationItem[];
 
   loading: boolean;
+  error: string | null;
   refetch: () => void;
 }
 
@@ -168,6 +169,7 @@ const DEFAULT_CONTEXT: PortfolioContextType = {
     { id: 'bfa-risd', degree: 'BFA in Graphic Design', school: 'Rhode Island School of Design', year: '2014 — 2018' },
   ],
   loading: true,
+  error: null,
   refetch: () => {},
 };
 
@@ -250,31 +252,29 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         ? statsData.map((s: any) => ({ value: s.value, suffix: s.suffix, label: s.label }))
         : DEFAULT_CONTEXT.stats;
 
-      // ── Home Projects (featured) ──────────────────────────────────────────
-      const homeProjects = (projects && projects.length > 0)
-        ? projects
-            .filter((p: any) => p.is_featured)
-            .sort((a: any, b: any) => a.sort_order - b.sort_order)
-            .map((p: any) => ({
-              id: p.slug,
-              title: p.title,
-              col: p.grid_col_span || 'md:col-span-7',
-              image: p.hero_image,
-            }))
+      // ── Home Projects (featured, with fallback) ───────────────────────────
+      const featuredProjects = (projects || []).filter((p: any) => p.is_featured);
+      const displayProjects = featuredProjects.length > 0 ? featuredProjects : (projects || []).slice(0, 4);
+      const homeProjects = displayProjects.length > 0
+        ? displayProjects.sort((a: any, b: any) => a.sort_order - b.sort_order).map((p: any) => ({
+            id: p.slug,
+            title: p.title,
+            col: p.grid_col_span || 'md:col-span-7',
+            image: p.hero_image,
+          }))
         : DEFAULT_CONTEXT.homeProjects;
 
-      // ── Home Journal ──────────────────────────────────────────────────────
-      const homeJournal = (journalEntries && journalEntries.length > 0)
-        ? journalEntries
-            .filter((e: any) => e.is_featured)
-            .sort((a: any, b: any) => a.sort_order - b.sort_order)
-            .map((e: any) => ({
-              id: e.slug,
-              title: e.title,
-              date: e.date,
-              readTime: e.reading_time,
-              image: e.hero_image,
-            }))
+      // ── Home Journal (featured, with fallback) ────────────────────────────
+      const featuredJournal = (journalEntries || []).filter((e: any) => e.is_featured);
+      const displayJournal = featuredJournal.length > 0 ? featuredJournal : (journalEntries || []).slice(0, 4);
+      const homeJournal = displayJournal.length > 0
+        ? displayJournal.sort((a: any, b: any) => a.sort_order - b.sort_order).map((e: any) => ({
+            id: e.slug,
+            title: e.title,
+            date: e.date,
+            readTime: e.reading_time,
+            image: e.hero_image,
+          }))
         : DEFAULT_CONTEXT.homeJournal;
 
       // ── Contact ───────────────────────────────────────────────────────────
@@ -462,15 +462,39 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         allProjects,
         education,
         loading: false,
+        error: null,
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('[PortfolioData] Fetch error:', err);
-      // On error, keep defaults so site still shows original data
-      setCtx(prev => ({ ...prev, loading: false }));
+      setCtx(prev => ({ 
+        ...prev, 
+        loading: false,
+        error: err?.message || 'Failed to load data from Supabase. Check your .env variables and that schema.sql has been run.'
+      }));
     }
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // ── Supabase Realtime: auto-refresh when Back Office saves data ──────────
+  useEffect(() => {
+    const tables = ['projects', 'journal_entries', 'stats', 'hero_settings',
+                    'hero_roles', 'nav_links', 'contact_settings', 'experiences',
+                    'academics', 'activities'];
+
+    const channels = tables.map(table =>
+      supabase
+        .channel(`realtime:${table}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table }, () => {
+          fetchAll();
+        })
+        .subscribe()
+    );
+
+    return () => {
+      channels.forEach(channel => supabase.removeChannel(channel));
+    };
+  }, [fetchAll]);
 
   return (
     <PortfolioDataContext.Provider value={{ ...ctx, refetch: fetchAll }}>
