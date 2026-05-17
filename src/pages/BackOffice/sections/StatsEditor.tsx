@@ -4,7 +4,7 @@ import { supabase } from '../../../lib/supabase';
 import { BOCard, BOSectionHeader, BOField, BOInput, BOSaveButton, BOAlert, useSaveState } from '../components/BOUtils';
 import { Plus, Trash2 } from 'lucide-react';
 
-export function StatsEditor() {
+export function StatsEditor({ onSaved }: { onSaved?: () => void }) {
   const [stats, setStats] = useState<{ id: string; value: number; suffix: string; label: string; sort_order: number }[]>([]);
   const { saving, saved, error, withSave, setError } = useSaveState();
 
@@ -24,6 +24,7 @@ export function StatsEditor() {
     if (err) throw err;
     const { data } = await supabase.from('stats').select('*').order('sort_order');
     setStats(data || []);
+    onSaved?.();
   });
 
   return (

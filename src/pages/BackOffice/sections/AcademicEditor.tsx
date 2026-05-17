@@ -9,7 +9,7 @@ import type { Academic } from '../../../lib/types';
 type Mode = 'list' | 'edit' | 'create';
 const empty = () => ({ slug: '', degree: '', school: '', period: '', location: '', short_desc: '', long_desc: '', hero_image: '', sort_order: 0 });
 
-export default function AcademicEditor() {
+export default function AcademicEditor({ onSaved }: { onSaved?: () => void }) {
   const [mode, setMode] = useState<Mode>('list');
   const [items, setItems] = useState<Academic[]>([]);
   const [selected, setSelected] = useState<Academic | null>(null);
@@ -70,6 +70,7 @@ export default function AcademicEditor() {
       await saveRelations(selected!.id);
     }
     await load();
+    onSaved?.();
   });
 
   const handleDelete = async (id: string) => {

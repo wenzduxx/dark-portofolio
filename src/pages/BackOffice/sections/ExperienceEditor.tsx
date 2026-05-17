@@ -13,7 +13,7 @@ const empty = () => ({
   short_desc: '', long_desc: '', hero_image: '', sort_order: 0,
 });
 
-export default function ExperienceEditor() {
+export default function ExperienceEditor({ onSaved }: { onSaved?: () => void }) {
   const [mode, setMode] = useState<Mode>('list');
   const [items, setItems] = useState<Experience[]>([]);
   const [selected, setSelected] = useState<Experience | null>(null);
@@ -81,6 +81,7 @@ export default function ExperienceEditor() {
       await saveRelations(selected!.id);
     }
     await load();
+    onSaved?.();
   });
 
   const handleDelete = async (id: string) => {

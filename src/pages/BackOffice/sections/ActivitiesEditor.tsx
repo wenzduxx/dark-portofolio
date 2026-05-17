@@ -9,7 +9,7 @@ import type { Activity } from '../../../lib/types';
 type Mode = 'list' | 'edit' | 'create';
 const empty = () => ({ slug: '', title: '', type: 'Experiment' as const, status: '', date: '', description: '', long_description: '', impact: '', sort_order: 0 });
 
-export default function ActivitiesEditor() {
+export default function ActivitiesEditor({ onSaved }: { onSaved?: () => void }) {
   const [mode, setMode] = useState<Mode>('list');
   const [items, setItems] = useState<Activity[]>([]);
   const [selected, setSelected] = useState<Activity | null>(null);
@@ -51,6 +51,7 @@ export default function ActivitiesEditor() {
       await saveRelations(selected!.id);
     }
     await load();
+    onSaved?.();
   });
 
   const handleDelete = async (id: string) => {

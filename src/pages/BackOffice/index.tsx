@@ -35,9 +35,16 @@ export default function BackOffice() {
     }
   }, []);
 
-  const notifyPreviewRefresh = useCallback(() => {
-    setTimeout(() => refreshPreview(), 800); // Wait for Supabase write to settle
-  }, [refreshPreview]);
+  // Called by editors after a successful save — forces iframe hard-reload
+  const refreshIframe = useCallback(() => {
+    if (previewRef.current) {
+      const currentSrc = previewRef.current.src;
+      previewRef.current.src = '';
+      setTimeout(() => {
+        if (previewRef.current) previewRef.current.src = currentSrc;
+      }, 100);
+    }
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -71,16 +78,16 @@ export default function BackOffice() {
   const handleLogout = async () => { await supabase.auth.signOut(); };
 
   const SECTIONS: Record<BOSection, React.ReactNode> = {
-    'site-settings': <SiteSettingsSection />,
-    'hero': <HeroEditor />,
-    'projects': <ProjectsEditor />,
-    'journal': <JournalEditor />,
-    'experience': <ExperienceEditor />,
-    'academic': <AcademicEditor />,
-    'activities': <ActivitiesEditor />,
-    'stats': <StatsEditor />,
-    'navigation': <NavigationEditor />,
-    'contact': <ContactEditor />,
+    'site-settings': <SiteSettingsSection onSaved={refreshIframe} />,
+    'hero': <HeroEditor onSaved={refreshIframe} />,
+    'projects': <ProjectsEditor onSaved={refreshIframe} />,
+    'journal': <JournalEditor onSaved={refreshIframe} />,
+    'experience': <ExperienceEditor onSaved={refreshIframe} />,
+    'academic': <AcademicEditor onSaved={refreshIframe} />,
+    'activities': <ActivitiesEditor onSaved={refreshIframe} />,
+    'stats': <StatsEditor onSaved={refreshIframe} />,
+    'navigation': <NavigationEditor onSaved={refreshIframe} />,
+    'contact': <ContactEditor onSaved={refreshIframe} />,
   };
 
   return (

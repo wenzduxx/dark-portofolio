@@ -8,7 +8,7 @@ import { usePortfolioData } from '../contexts/PortfolioDataContext';
 export function Hero() {
   const heroRef = useRef<HTMLDivElement>(null);
   const [roleIndex, setRoleIndex] = useState(0);
-  const { roles: ROLES } = usePortfolioData();
+  const { roles: ROLES, heroData, siteData } = usePortfolioData();
 
   useEffect(() => {
     if (ROLES.length === 0) return;
@@ -43,7 +43,7 @@ export function Hero() {
       {/* Background Effect */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <Aurora
-          colorStops={["#84CC16","#EAB308","#f32222"]}
+          colorStops={[heroData.auroraColor1, heroData.auroraColor2, heroData.auroraColor3]}
           blend={0.5}
           amplitude={1.0}
           speed={0.5}
@@ -55,29 +55,29 @@ export function Hero() {
       {/* Hero Content */}
       <div className="z-10 flex flex-col items-center text-center px-4 mt-auto mb-auto w-full max-w-4xl">
         <p className="blur-in text-xs text-muted uppercase tracking-[0.3em] mb-8">
-          COLLECTION '26
+          {siteData.collectionLabel}
         </p>
         
         <h1 className="name-reveal text-6xl md:text-8xl lg:text-9xl font-display italic leading-[0.9] tracking-tight mb-6">
           <ShinyText
-            text="Michael Smith"
+            text={heroData.headlineName}
             speed={4}
           />
         </h1>
         
         <p className="blur-in text-lg md:text-2xl text-text-primary/90 mb-6 font-light">
-          A <span key={roleIndex} className="font-display italic text-text-primary animate-role-fade-in inline-block">{ROLES[roleIndex]}</span> lives in Chicago.
+          {heroData.taglinePrefix} <span key={roleIndex} className="font-display italic text-text-primary animate-role-fade-in inline-block">{ROLES[roleIndex]}</span> {heroData.taglineSuffix}
         </p>
         
         <p className="blur-in text-sm md:text-base text-muted max-w-md mb-12">
-          Designing seamless digital interactions by focusing on the unique nuances which bring systems to life.
+          {heroData.description}
         </p>
 
         <div className="blur-in flex flex-wrap items-center justify-center gap-4">
           <button className="group relative rounded-full text-sm hover:scale-105 transition-all duration-300">
             <span className="absolute inset-[-2px] rounded-full accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative px-7 py-3.5 rounded-full bg-text-primary group-hover:bg-bg text-bg group-hover:text-text-primary transition-colors duration-300 z-10 mx-[2px] my-[2px] w-[calc(100%-4px)] h-[calc(100%-4px)] flex items-center justify-center">
-              See Works
+              {heroData.button1Text}
             </div>
           </button>
           
@@ -85,7 +85,7 @@ export function Hero() {
             <span className="absolute inset-[-2px] rounded-full accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <GlassSurface width="fit-content" height="fit-content" borderRadius={30} opacity={0.2} blur={10}>
               <div className="relative px-7 py-3 rounded-full text-text-primary flex items-center justify-center">
-                Reach out...
+                {heroData.button2Text}
               </div>
             </GlassSurface>
           </button>

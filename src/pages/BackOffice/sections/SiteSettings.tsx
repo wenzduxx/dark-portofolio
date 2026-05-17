@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { BOCard, BOSectionHeader, BOField, BOInput, BOSaveButton, BOAlert, useSaveState } from '../components/BOUtils';
 
-export default function SiteSettingsSection() {
+export default function SiteSettingsSection({ onSaved }: { onSaved?: () => void }) {
   const { saving, saved, error, withSave, setError } = useSaveState();
   const [form, setForm] = useState({
     owner_name: '', owner_initials: '', owner_email: '', owner_location: '',
@@ -24,6 +24,7 @@ export default function SiteSettingsSection() {
       .update({ ...form, updated_at: new Date().toISOString() })
       .eq('id', id);
     if (err) throw err;
+    onSaved?.();
   });
 
   return (

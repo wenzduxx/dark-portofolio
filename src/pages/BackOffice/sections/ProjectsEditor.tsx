@@ -18,7 +18,7 @@ const emptyProject = () => ({
   outcomes_description: '', is_featured: false, grid_col_span: 'md:col-span-7', sort_order: 0,
 });
 
-export default function ProjectsEditor() {
+export default function ProjectsEditor({ onSaved }: { onSaved?: () => void }) {
   const [mode, setMode] = useState<Mode>('list');
   const [projects, setProjects] = useState<Project[]>([]);
   const [selected, setSelected] = useState<Project | null>(null);
@@ -87,6 +87,7 @@ export default function ProjectsEditor() {
       await saveRelations(selected!.id);
     }
     await loadProjects();
+    onSaved?.();
   });
 
   const handleDelete = async (id: string) => {

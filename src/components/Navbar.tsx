@@ -7,7 +7,7 @@ import { usePortfolioData } from '../contexts/PortfolioDataContext';
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const { navLinks: NAV_LINKS } = usePortfolioData();
+  const { navLinks: NAV_LINKS, siteData } = usePortfolioData();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -38,7 +38,7 @@ export function Navbar() {
           >
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#89AACC] to-[#4E85BF] opacity-50 group-hover:opacity-100 transition-opacity duration-500 [animation:gradient-shift_6s_linear_infinite] group-hover:[animation-direction:reverse]" />
             <div className="absolute inset-[2px] rounded-full bg-bg/80 backdrop-blur-md z-10 flex items-center justify-center">
-               <span className="font-display italic text-[13px] text-text-primary">JA</span>
+               <span className="font-display italic text-[13px] text-text-primary">{siteData.logoInitials}</span>
             </div>
           </Link>
 
@@ -70,7 +70,7 @@ export function Navbar() {
 
           {/* "Say hi" button */}
           <a 
-            href="mailto:hello@michaelsmith.com"
+            href={`mailto:${siteData.ownerEmail}`}
             className="group relative rounded-full inline-flex items-center justify-center text-xs sm:text-sm px-4 py-2 hover:bg-white/10 transition-colors duration-300"
           >
             <span className="relative flex items-center gap-2 text-text-primary">

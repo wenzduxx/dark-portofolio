@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/supabase';
 import { BOCard, BOSectionHeader, BOField, BOInput, BOSaveButton, BOAlert, useSaveState } from '../components/BOUtils';
 import { PairEditor } from '../components/ArrayEditor';
 
-export default function ContactEditor() {
+export default function ContactEditor({ onSaved }: { onSaved?: () => void }) {
   const [id, setId] = useState('');
   const [form, setForm] = useState({ cta_label: '', cta_heading: '', email: '', availability_text: '' });
   const [socials, setSocials] = useState<{ label: string; value: string }[]>([]);
@@ -29,6 +29,7 @@ export default function ContactEditor() {
       .update({ ...form, social_links, updated_at: new Date().toISOString() })
       .eq('id', id);
     if (err) throw err;
+    onSaved?.();
   });
 
   return (

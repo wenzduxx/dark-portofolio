@@ -72,6 +72,25 @@ export interface ContactData {
   socialLinks: string[];
 }
 
+export interface HeroSettingsData {
+  headlineName: string;
+  taglinePrefix: string;
+  taglineSuffix: string;
+  description: string;
+  button1Text: string;
+  button2Text: string;
+  auroraColor1: string;
+  auroraColor2: string;
+  auroraColor3: string;
+}
+
+export interface SiteSettingsData {
+  collectionLabel: string;
+  logoInitials: string;
+  ownerEmail: string;
+  ownerName: string;
+}
+
 // ─── Context Shape ───────────────────────────────────────────────────────────
 
 interface PortfolioContextType {
@@ -92,6 +111,12 @@ interface PortfolioContextType {
 
   // Contact.tsx — replaces hardcoded strings
   contact: ContactData;
+
+  // Hero.tsx — replaces all hardcoded hero strings
+  heroData: HeroSettingsData;
+
+  // Navbar.tsx + Hero.tsx — replaces hardcoded site-level strings
+  siteData: SiteSettingsData;
 
   // ProjectDetail.tsx — replaces: import { DETAILED_PROJECTS }
   detailedProjects: Record<string, ProjectCaseStudy>;
@@ -155,6 +180,23 @@ const DEFAULT_CONTEXT: PortfolioContextType = {
     email: 'hello@michaelsmith.com',
     availabilityText: 'Available for projects',
     socialLinks: ['Twitter', 'LinkedIn', 'Dribbble', 'GitHub'],
+  },
+  heroData: {
+    headlineName: 'Michael Smith',
+    taglinePrefix: 'A',
+    taglineSuffix: 'lives in Chicago.',
+    description: 'Designing seamless digital interactions by focusing on the unique nuances which bring systems to life.',
+    button1Text: 'See Works',
+    button2Text: 'Reach out...',
+    auroraColor1: '#84CC16',
+    auroraColor2: '#EAB308',
+    auroraColor3: '#f32222',
+  },
+  siteData: {
+    collectionLabel: "COLLECTION '26",
+    logoInitials: 'JA',
+    ownerEmail: 'hello@michaelsmith.com',
+    ownerName: 'Michael Smith',
   },
   detailedProjects: {},
   journalMap: {},
@@ -236,6 +278,27 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         supabase.from('activities').select('*').order('sort_order'),
         supabase.from('activity_links').select('*').order('sort_order'),
       ]);
+
+      // ── Hero Settings (was fetched but DISCARDED — now mapped!) ────────────
+      const heroData: HeroSettingsData = heroSettings ? {
+        headlineName: heroSettings.headline_name,
+        taglinePrefix: heroSettings.tagline_prefix,
+        taglineSuffix: heroSettings.tagline_suffix,
+        description: heroSettings.description,
+        button1Text: heroSettings.button1_text,
+        button2Text: heroSettings.button2_text,
+        auroraColor1: heroSettings.aurora_color1,
+        auroraColor2: heroSettings.aurora_color2,
+        auroraColor3: heroSettings.aurora_color3,
+      } : DEFAULT_CONTEXT.heroData;
+
+      // ── Site Settings (was fetched but DISCARDED — now mapped!) ────────────
+      const siteData: SiteSettingsData = siteSettings ? {
+        collectionLabel: siteSettings.collection_label,
+        logoInitials: siteSettings.logo_initials,
+        ownerEmail: siteSettings.owner_email,
+        ownerName: siteSettings.owner_name,
+      } : DEFAULT_CONTEXT.siteData;
 
       // ── Hero roles ────────────────────────────────────────────────────────
       const roles = (heroRoles && heroRoles.length > 0)
@@ -452,6 +515,8 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         homeProjects,
         homeJournal,
         contact,
+        heroData,
+        siteData,
         detailedProjects,
         journalMap,
         experiencesMap,
@@ -478,13 +543,18 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
 
   // ── Supabase Realtime: auto-refresh when Back Office saves data ──────────
   useEffect(() => {
-    const tables = ['projects', 'journal_entries', 'stats', 'hero_settings',
-                    'hero_roles', 'nav_links', 'contact_settings', 'experiences',
-                    'academics', 'activities'];
+    const WATCHED_TABLES = [
+      'site_settings', 'hero_settings', 'hero_roles', 'nav_links', 'stats',
+      'contact_settings', 'projects', 'project_tech_stack', 'project_methodology_phases',
+      'project_metrics', 'project_visuals', 'journal_entries', 'journal_content',
+      'journal_tags', 'experiences', 'experience_responsibilities', 'experience_technologies',
+      'experience_metrics', 'experience_gallery', 'academics', 'academic_activities',
+      'academic_metrics', 'academic_gallery', 'activities', 'activity_links'
+    ];
 
-    const channels = tables.map(table =>
+    const channels = WATCHED_TABLES.map(table =>
       supabase
-        .channel(`realtime:${table}`)
+        .channel(`realtime_${table}`)
         .on('postgres_changes', { event: '*', schema: 'public', table }, () => {
           fetchAll();
         })
@@ -492,7 +562,7 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
     );
 
     return () => {
-      channels.forEach(channel => supabase.removeChannel(channel));
+      channels.forEach(ch => supabase.removeChannel(ch));
     };
   }, [fetchAll]);
 

@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/supabase';
 import { BOCard, BOSectionHeader, BOField, BOInput, BOSaveButton, BOAlert, useSaveState } from '../components/BOUtils';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
 
-export default function NavigationEditor() {
+export default function NavigationEditor({ onSaved }: { onSaved?: () => void }) {
   const [links, setLinks] = useState<{ id: string; name: string; path: string; sort_order: number }[]>([]);
   const { saving, saved, error, withSave } = useSaveState();
 
@@ -23,6 +23,7 @@ export default function NavigationEditor() {
     if (err) throw err;
     const { data } = await supabase.from('nav_links').select('*').order('sort_order');
     setLinks(data || []);
+    onSaved?.();
   });
 
   return (

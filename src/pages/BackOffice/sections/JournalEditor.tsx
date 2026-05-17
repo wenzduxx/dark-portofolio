@@ -13,7 +13,7 @@ const empty = () => ({
   hero_image: '', excerpt: '', is_featured: false, sort_order: 0,
 });
 
-export default function JournalEditor() {
+export default function JournalEditor({ onSaved }: { onSaved?: () => void }) {
   const [mode, setMode] = useState<Mode>('list');
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [selected, setSelected] = useState<JournalEntry | null>(null);
@@ -74,6 +74,7 @@ export default function JournalEditor() {
       await saveRelations(selected!.id);
     }
     await load();
+    onSaved?.();
   });
 
   const handleDelete = async (id: string) => {

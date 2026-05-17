@@ -4,7 +4,7 @@ import { BOCard, BOSectionHeader, BOField, BOInput, BOSaveButton, BOAlert, useSa
 import ArrayEditor from '../components/ArrayEditor';
 import { Plus, Trash2, Save } from 'lucide-react';
 
-export default function HeroEditor() {
+export default function HeroEditor({ onSaved }: { onSaved?: () => void }) {
   const { saving, saved, error, withSave, setError } = useSaveState();
   const [form, setForm] = useState({
     headline_name: '', tagline_prefix: '', tagline_suffix: '', description: '',
@@ -30,6 +30,7 @@ export default function HeroEditor() {
     const { error: err } = await supabase.from('hero_settings')
       .update({ ...form, updated_at: new Date().toISOString() }).eq('id', id);
     if (err) throw err;
+    onSaved?.();
   });
 
   const saveRoles = async () => {
@@ -43,6 +44,7 @@ export default function HeroEditor() {
       if (err) { setError(err.message); }
     }
     setRolesSaving(false);
+    onSaved?.();
   };
 
   return (
