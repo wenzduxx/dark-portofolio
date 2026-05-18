@@ -7,15 +7,21 @@ import { usePortfolioData } from '../contexts/PortfolioDataContext';
 export default function ActivityDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { activitiesMap: ACTIVITIES } = usePortfolioData();
+  const { activitiesMap: ACTIVITIES, loading } = usePortfolioData();
   const activity = id ? ACTIVITIES[id] : null;
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (!activity) {
-      navigate('/resume');
+    if (!loading && !activity) {
+      navigate('/');
     }
-  }, [activity, navigate]);
+  }, [activity, navigate, loading]);
+
+  if (loading) return (
+    <div className="min-h-screen bg-bg flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   if (!activity) return null;
 

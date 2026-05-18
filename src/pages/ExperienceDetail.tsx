@@ -11,7 +11,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function ExperienceDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { experiencesMap: EXPRIENCES } = usePortfolioData();
+  const { experiencesMap: EXPRIENCES, loading } = usePortfolioData();
   const exp = id ? EXPRIENCES[id] : null;
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -19,7 +19,7 @@ export default function ExperienceDetail() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (!exp) {
+    if (!loading && !exp) {
       navigate('/work');
       return;
     }
@@ -84,7 +84,13 @@ export default function ExperienceDetail() {
     }, containerRef);
 
     return () => ctx.revert();
-  }, [exp, navigate]);
+  }, [exp, navigate, loading]);
+
+  if (loading) return (
+    <div className="min-h-screen bg-bg flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   if (!exp) return null;
 

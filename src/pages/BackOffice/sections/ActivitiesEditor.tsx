@@ -1,13 +1,13 @@
-// ActivitiesEditor.tsx
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { BOCard, BOSectionHeader, BOField, BOInput, BOSaveButton, BOAlert, useSaveState } from '../components/BOUtils';
 import { PairEditor } from '../components/ArrayEditor';
+import ImageUpload from '../components/ImageUpload';
 import { Plus, Pencil, Trash2, ChevronLeft, Eye } from 'lucide-react';
 import type { Activity } from '../../../lib/types';
 
 type Mode = 'list' | 'edit' | 'create';
-const empty = () => ({ slug: '', title: '', type: 'Experiment' as const, status: '', date: '', description: '', long_description: '', impact: '', sort_order: 0 });
+const empty = () => ({ slug: '', title: '', type: 'Experiment' as const, status: '', date: '', description: '', long_description: '', impact: '', image_url: '', sort_order: 0 });
 
 export default function ActivitiesEditor({ onSaved }: { onSaved?: () => void }) {
   const [mode, setMode] = useState<Mode>('list');
@@ -118,6 +118,7 @@ export default function ActivitiesEditor({ onSaved }: { onSaved?: () => void }) 
           <BOField label="Short Description"><BOInput value={form.description} onChange={set('description')} rows={2} /></BOField>
           <BOField label="Long Description"><BOInput value={form.long_description} onChange={set('long_description')} rows={4} /></BOField>
           <BOField label="Impact (optional)"><BOInput value={form.impact || ''} onChange={set('impact')} rows={2} /></BOField>
+          <ImageUpload value={form.image_url || ''} onChange={set('image_url')} label="Cover Image" />
         </div>
       </BOCard>
       <BOCard>

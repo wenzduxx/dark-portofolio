@@ -17,11 +17,17 @@ export function StatsEditor({ onSaved }: { onSaved?: () => void }) {
   };
 
   const handleSave = () => withSave(async () => {
-    await supabase.from('stats').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    const { error: err } = await supabase.from('stats').insert(
-      stats.map((s, i) => ({ value: Number(s.value), suffix: s.suffix, label: s.label, sort_order: i }))
-    );
-    if (err) throw err;
+    const { data: existing } = await supabase.from('stats').select('id');
+    const existingIds = (existing || []).map((r: any) => r.id);
+    if (existingIds.length > 0) {
+      await supabase.from('stats').delete().in('id', existingIds);
+    }
+    if (stats.length > 0) {
+      const { error: err } = await supabase.from('stats').insert(
+        stats.map((s, i) => ({ value: Number(s.value), suffix: s.suffix, label: s.label, sort_order: i }))
+      );
+      if (err) throw err;
+    }
     const { data } = await supabase.from('stats').select('*').order('sort_order');
     setStats(data || []);
     onSaved?.();

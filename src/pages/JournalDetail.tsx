@@ -7,15 +7,21 @@ import { usePortfolioData } from '../contexts/PortfolioDataContext';
 export default function JournalDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { journalMap: JOURNAL_ENTRIES } = usePortfolioData();
+  const { journalMap: JOURNAL_ENTRIES, loading } = usePortfolioData();
   const entry = id ? JOURNAL_ENTRIES[id] : null;
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (!entry) {
+    if (!loading && !entry) {
       navigate('/');
     }
-  }, [entry, navigate]);
+  }, [entry, navigate, loading]);
+
+  if (loading) return (
+    <div className="min-h-screen bg-bg flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   if (!entry) return null;
 

@@ -11,7 +11,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { detailedProjects: DETAILED_PROJECTS } = usePortfolioData();
+  const { detailedProjects: DETAILED_PROJECTS, loading } = usePortfolioData();
   const project = id ? DETAILED_PROJECTS[id] : null;
   
   const containerRef = useRef<HTMLDivElement>(null);
@@ -23,7 +23,7 @@ export default function ProjectDetail() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (!project) {
+    if (!loading && !project) {
       navigate('/work');
       return;
     }
@@ -89,7 +89,13 @@ export default function ProjectDetail() {
     }, containerRef);
 
     return () => ctx.revert();
-  }, [project, navigate]);
+  }, [project, navigate, loading]);
+
+  if (loading) return (
+    <div className="min-h-screen bg-bg flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   if (!project) return null;
 

@@ -182,6 +182,9 @@ interface PortfolioContextType {
   // Work.tsx — replaces: const CLIENTS = [...]
   clients: string[];
 
+  // Explorations.tsx — replaces hardcoded EXPLORATIONS constant
+  explorations: { id: string; image: string; col: number }[];
+
   loading: boolean;
   error: string | null;
   refetch: () => void;
@@ -291,6 +294,14 @@ const DEFAULT_CONTEXT: PortfolioContextType = {
     ],
   },
   clients: ['Apple', 'Nike', 'Vercel', 'Airbnb', 'Spotify', 'Meta', 'Tesla', 'Netflix'],
+  explorations: [
+    { id: '1', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600', col: 1 },
+    { id: '2', image: 'https://images.unsplash.com/photo-1550684376-efcbd6e3f031?auto=format&fit=crop&q=80&w=600', col: 2 },
+    { id: '3', image: 'https://images.unsplash.com/photo-1604871000636-074fa5117945?auto=format&fit=crop&q=80&w=600', col: 1 },
+    { id: '4', image: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&q=80&w=600', col: 2 },
+    { id: '5', image: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=600', col: 1 },
+    { id: '6', image: 'https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&q=80&w=600', col: 2 },
+  ],
   loading: true,
   error: null,
   refetch: () => {},
@@ -336,6 +347,7 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         { data: resumeSkills },
         { data: resumeCertifications },
         { data: clientsData },
+        { data: explorationsData },
       ] = await Promise.all([
         supabase.from('site_settings').select('*').single(),
         supabase.from('hero_settings').select('*').single(),
@@ -362,10 +374,11 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         supabase.from('academic_gallery').select('*').order('sort_order'),
         supabase.from('activities').select('*').order('sort_order'),
         supabase.from('activity_links').select('*').order('sort_order'),
-        supabase.from('resume_settings').select('*').single(),
-        supabase.from('resume_skills').select('*').order('sort_order'),
-        supabase.from('resume_certifications').select('*').order('sort_order'),
-        supabase.from('clients').select('*').order('sort_order'),
+        supabase.from('resume_settings').select('*').single().catch(() => ({ data: null })),
+        supabase.from('resume_skills').select('*').order('sort_order').catch(() => ({ data: null })),
+        supabase.from('resume_certifications').select('*').order('sort_order').catch(() => ({ data: null })),
+        supabase.from('clients').select('*').order('sort_order').catch(() => ({ data: null })),
+        supabase.from('explorations_gallery').select('*').order('column_position').order('sort_order').catch(() => ({ data: null })),
       ]);
 
       // ── Hero Settings (was fetched but DISCARDED — now mapped!) ────────────
@@ -548,7 +561,7 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
             title: a.title,
             category: a.type,
             date: a.date,
-            image: 'https://images.unsplash.com/photo-1545235617-9465d2a55698?auto=format&fit=crop&q=80&w=600',
+            image: a.image_url || 'https://images.unsplash.com/photo-1545235617-9465d2a55698?auto=format&fit=crop&q=80&w=600',
           });
         }
       }
@@ -636,6 +649,11 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         ? clientsData.map((c: any) => c.name)
         : DEFAULT_CONTEXT.clients;
 
+      // ── Explorations Gallery ──────────────────────────────────────────────
+      const explorations = (explorationsData && explorationsData.length > 0)
+        ? explorationsData.map((e: any) => ({ id: e.id, image: e.image_url, col: e.column_position }))
+        : DEFAULT_CONTEXT.explorations;
+
       setCtx({
         roles,
         navLinks: resolvedNavLinks,
@@ -656,6 +674,7 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         education,
         resumeData,
         clients,
+        explorations,
         loading: false,
         error: null,
       });
@@ -681,7 +700,7 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
       'experience_metrics', 'experience_gallery', 'academics', 'academic_activities',
       'academic_metrics', 'academic_gallery', 'activities', 'activity_links',
       'resume_settings', 'resume_skills', 'resume_certifications',
-      'clients'
+      'clients', 'explorations_gallery'
     ];
 
     const channels = WATCHED_TABLES.map(table =>

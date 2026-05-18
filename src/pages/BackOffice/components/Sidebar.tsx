@@ -2,7 +2,7 @@ import React from 'react';
 import type { BOSection } from '../index';
 import {
   Settings, Layout, Briefcase, BookOpen, Award,
-  Activity, BarChart3, Navigation, Mail, Layers, FileText
+  Activity, BarChart3, Navigation, Mail, Layers, FileText, Images
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -16,6 +16,7 @@ const SECTIONS: { id: BOSection; label: string; icon: React.ElementType<{ classN
   { id: 'stats', label: 'Stats', icon: BarChart3, group: 'Global' },
   { id: 'navigation', label: 'Navigation', icon: Navigation, group: 'Global' },
   { id: 'contact', label: 'Contact / Footer', icon: Mail, group: 'Global' },
+  { id: 'explorations', label: 'Explorations Gallery', icon: Images, group: 'Global' },
   { id: 'resume', label: 'Resume / About', icon: FileText, group: 'Content' },
   { id: 'projects', label: 'Projects', icon: Briefcase, group: 'Content' },
   { id: 'journal', label: 'Journal', icon: BookOpen, group: 'Content' },

@@ -13,12 +13,13 @@ import StatsEditor from './sections/StatsEditor';
 import ContactEditor from './sections/ContactEditor';
 import NavigationEditor from './sections/NavigationEditor';
 import ResumeEditor from './sections/ResumeEditor';
+import ExplorationsEditor from './sections/ExplorationsEditor';
 import { Menu, X, ExternalLink, RefreshCw, Layout } from 'lucide-react';
 
 export type BOSection =
   | 'site-settings' | 'hero' | 'projects' | 'journal'
   | 'experience' | 'academic' | 'activities'
-  | 'stats' | 'navigation' | 'contact' | 'resume';
+  | 'stats' | 'navigation' | 'contact' | 'resume' | 'explorations';
 
 export default function BackOffice() {
   const [session, setSession] = useState<any>(null);
@@ -78,6 +79,26 @@ export default function BackOffice() {
 
   const handleLogout = async () => { await supabase.auth.signOut(); };
 
+  const SECTION_PREVIEW_MAP: Record<BOSection, string> = {
+    'site-settings': '/',
+    'hero': '/',
+    'stats': '/',
+    'navigation': '/',
+    'contact': '/#contact',
+    'explorations': '/',
+    'resume': '/resume',
+    'projects': '/work',
+    'journal': '/',
+    'experience': '/work',
+    'academic': '/resume',
+    'activities': '/work',
+  };
+
+  const handleSectionChange = (section: BOSection) => {
+    setActiveSection(section);
+    setPreviewUrl(SECTION_PREVIEW_MAP[section]);
+  };
+
   const SECTIONS: Record<BOSection, React.ReactNode> = {
     'site-settings': <SiteSettingsSection onSaved={refreshIframe} />,
     'hero': <HeroEditor onSaved={refreshIframe} />,
@@ -90,6 +111,7 @@ export default function BackOffice() {
     'navigation': <NavigationEditor onSaved={refreshIframe} />,
     'contact': <ContactEditor onSaved={refreshIframe} />,
     'resume': <ResumeEditor onSaved={refreshIframe} />,
+    'explorations': <ExplorationsEditor onSaved={refreshIframe} />,
   };
 
   return (
@@ -145,7 +167,7 @@ export default function BackOffice() {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div className={`shrink-0 transition-all duration-300 ${sidebarOpen ? 'w-56' : 'w-0'} overflow-hidden border-r border-[#1e1e1e]`}>
-          <Sidebar activeSection={activeSection} onSelect={(s) => { setActiveSection(s); }} />
+          <Sidebar activeSection={activeSection} onSelect={handleSectionChange} />
         </div>
 
         {/* Editor Area */}
@@ -172,7 +194,7 @@ export default function BackOffice() {
                 ))}
               </div>
               <div className="flex-1 bg-[#1a1a1a] rounded px-2 py-1 text-xs text-[#555] font-mono">
-                localhost:3000{previewUrl}
+                {window.location.origin}{previewUrl}
               </div>
               <button
                 onClick={refreshPreview}

@@ -11,7 +11,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function AcademicDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { academicsMap: ACADEMICS } = usePortfolioData();
+  const { academicsMap: ACADEMICS, loading } = usePortfolioData();
   const academic = id ? ACADEMICS[id] : null;
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -19,7 +19,7 @@ export default function AcademicDetail() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (!academic) {
+    if (!loading && !academic) {
       navigate('/resume');
       return;
     }
@@ -84,7 +84,13 @@ export default function AcademicDetail() {
     }, containerRef);
 
     return () => ctx.revert();
-  }, [academic, navigate]);
+  }, [academic, navigate, loading]);
+
+  if (loading) return (
+    <div className="min-h-screen bg-bg flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   if (!academic) return null;
 

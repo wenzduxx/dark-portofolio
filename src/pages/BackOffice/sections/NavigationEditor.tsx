@@ -16,11 +16,17 @@ export default function NavigationEditor({ onSaved }: { onSaved?: () => void }) 
   };
 
   const handleSave = () => withSave(async () => {
-    await supabase.from('nav_links').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    const { error: err } = await supabase.from('nav_links').insert(
-      links.map((l, i) => ({ name: l.name, path: l.path, sort_order: i }))
-    );
-    if (err) throw err;
+    const { data: existing } = await supabase.from('nav_links').select('id');
+    const existingIds = (existing || []).map((r: any) => r.id);
+    if (existingIds.length > 0) {
+      await supabase.from('nav_links').delete().in('id', existingIds);
+    }
+    if (links.length > 0) {
+      const { error: err } = await supabase.from('nav_links').insert(
+        links.map((l, i) => ({ name: l.name, path: l.path, sort_order: i }))
+      );
+      if (err) throw err;
+    }
     const { data } = await supabase.from('nav_links').select('*').order('sort_order');
     setLinks(data || []);
     onSaved?.();
