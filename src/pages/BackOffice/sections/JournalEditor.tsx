@@ -150,7 +150,7 @@ export default function JournalEditor({ onSaved }: { onSaved?: () => void }) {
       </BOCard>
 
       <BOCard>
-        <ImageUpload value={form.hero_image} onChange={set('hero_image')} label="Hero Image" />
+        <ImageUpload value={form.hero_image} onChange={set('hero_image')} label="Hero Image" bucket="journal" />
       </BOCard>
 
       <BOCard>

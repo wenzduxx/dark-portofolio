@@ -120,6 +120,7 @@ export default function ExplorationsEditor({ onSaved }: { onSaved?: () => void }
             value={item.image_url}
             onChange={v => update(i, 'image_url', v)}
             label="Image URL or upload"
+            bucket="explorations"
           />
         </BOCard>
       ))}

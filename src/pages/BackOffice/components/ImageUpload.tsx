@@ -1,14 +1,15 @@
 import React, { useRef, useState } from 'react';
-import { supabase, STORAGE_URL } from '../../../lib/supabase';
+import { supabase, deleteStorageFile } from '../../../lib/supabase';
 import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
 
 interface ImageUploadProps {
   value: string;
   onChange: (url: string) => void;
   label?: string;
+  bucket?: string;
 }
 
-export default function ImageUpload({ value, onChange, label = 'Image' }: ImageUploadProps) {
+export default function ImageUpload({ value, onChange, label = 'Image', bucket = 'general' }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -20,16 +21,30 @@ export default function ImageUpload({ value, onChange, label = 'Image' }: ImageU
     try {
       const ext = file.name.split('.').pop();
       const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      // If replacing an existing image, try to delete the old one first
+      if (value) {
+        await deleteStorageFile(value);
+      }
+
       const { error: uploadError } = await supabase.storage
-        .from('portfolio-images')
+        .from(bucket)
         .upload(path, file, { upsert: true });
       if (uploadError) throw uploadError;
-      onChange(`${STORAGE_URL}/${path}`);
+      
+      const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(path);
+      onChange(publicUrlData.publicUrl);
     } catch (err: any) {
       setError(err.message || 'Upload failed');
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleRemove = async () => {
+    if (value) {
+      await deleteStorageFile(value);
+    }
+    onChange('');
   };
 
   return (
@@ -61,7 +76,7 @@ export default function ImageUpload({ value, onChange, label = 'Image' }: ImageU
             className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-[#e5e5e5] placeholder-[#444] focus:outline-none focus:border-[#84CC16] transition-colors"
           />
           {value && (
-            <button onClick={() => onChange('')} className="p-2 text-[#555] hover:text-red-400 transition-colors">
+            <button onClick={handleRemove} className="p-2 text-[#555] hover:text-red-400 transition-colors">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -96,7 +111,7 @@ export default function ImageUpload({ value, onChange, label = 'Image' }: ImageU
         <div className="mt-3 relative group rounded-lg overflow-hidden border border-[#2a2a2a] h-32 bg-[#1a1a1a]">
           <img src={value} alt="Preview" className="w-full h-full object-cover" />
           <button
-            onClick={() => onChange('')}
+            onClick={handleRemove}
             className="absolute top-2 right-2 bg-black/60 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <X className="w-3 h-3 text-white" />
