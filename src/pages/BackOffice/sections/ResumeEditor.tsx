@@ -139,7 +139,7 @@ export default function ResumeEditor({ onSaved }: { onSaved?: () => void }) {
   const saveSkills = async () => {
     setSkillsSaving(true);
     try {
-      await supabase.from('resume_skills').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('resume_skills').delete().not('id', 'is', null);
       if (skills.length > 0) {
         const { error: err } = await supabase.from('resume_skills').insert(
           skills.map((s, i) => ({
@@ -180,7 +180,7 @@ export default function ResumeEditor({ onSaved }: { onSaved?: () => void }) {
   const saveCerts = async () => {
     setCertsSaving(true);
     try {
-      await supabase.from('resume_certifications').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('resume_certifications').delete().not('id', 'is', null);
       if (certs.length > 0) {
         const { error: err } = await supabase.from('resume_certifications').insert(
           certs.filter(c => c.title.trim()).map((c, i) => ({

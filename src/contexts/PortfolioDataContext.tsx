@@ -374,11 +374,11 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         supabase.from('academic_gallery').select('*').order('sort_order'),
         supabase.from('activities').select('*').order('sort_order'),
         supabase.from('activity_links').select('*').order('sort_order'),
-        supabase.from('resume_settings').select('*').single().catch(() => ({ data: null })),
-        supabase.from('resume_skills').select('*').order('sort_order').catch(() => ({ data: null })),
-        supabase.from('resume_certifications').select('*').order('sort_order').catch(() => ({ data: null })),
-        supabase.from('clients').select('*').order('sort_order').catch(() => ({ data: null })),
-        supabase.from('explorations_gallery').select('*').order('column_position').order('sort_order').catch(() => ({ data: null })),
+        supabase.from('resume_settings').select('*').single(),
+        supabase.from('resume_skills').select('*').order('sort_order'),
+        supabase.from('resume_certifications').select('*').order('sort_order'),
+        supabase.from('clients').select('*').order('sort_order'),
+        supabase.from('explorations_gallery').select('*').order('column_position').order('sort_order'),
       ]);
 
       // ── Hero Settings (was fetched but DISCARDED — now mapped!) ────────────
@@ -629,16 +629,16 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
           : DEFAULT_CONTEXT.resumeData.certifications;
 
         resumeData = {
-          bioName: resumeSettings.bio_name || DEFAULT_CONTEXT.resumeData.bioName,
-          bioParagraph1: resumeSettings.bio_paragraph1 || DEFAULT_CONTEXT.resumeData.bioParagraph1,
-          bioParagraph2: resumeSettings.bio_paragraph2 || DEFAULT_CONTEXT.resumeData.bioParagraph2,
-          profileImage: resumeSettings.profile_image || DEFAULT_CONTEXT.resumeData.profileImage,
-          location: resumeSettings.location || DEFAULT_CONTEXT.resumeData.location,
-          cvUrl: resumeSettings.cv_url || '',
-          formHeading: resumeSettings.form_heading || DEFAULT_CONTEXT.resumeData.formHeading,
-          formSubtext: resumeSettings.form_subtext || DEFAULT_CONTEXT.resumeData.formSubtext,
-          formspreeId: resumeSettings.formspree_id || '',
-          pageHeading: resumeSettings.page_heading || DEFAULT_CONTEXT.resumeData.pageHeading,
+          bioName: resumeSettings.bio_name ?? DEFAULT_CONTEXT.resumeData.bioName,
+          bioParagraph1: resumeSettings.bio_paragraph1 ?? DEFAULT_CONTEXT.resumeData.bioParagraph1,
+          bioParagraph2: resumeSettings.bio_paragraph2 ?? DEFAULT_CONTEXT.resumeData.bioParagraph2,
+          profileImage: resumeSettings.profile_image ?? DEFAULT_CONTEXT.resumeData.profileImage,
+          location: resumeSettings.location ?? DEFAULT_CONTEXT.resumeData.location,
+          cvUrl: resumeSettings.cv_url ?? '',
+          formHeading: resumeSettings.form_heading ?? DEFAULT_CONTEXT.resumeData.formHeading,
+          formSubtext: resumeSettings.form_subtext ?? DEFAULT_CONTEXT.resumeData.formSubtext,
+          formspreeId: resumeSettings.formspree_id ?? '',
+          pageHeading: resumeSettings.page_heading ?? DEFAULT_CONTEXT.resumeData.pageHeading,
           skillColumns: skillCols.some(col => col.length > 0) ? skillCols : DEFAULT_CONTEXT.resumeData.skillColumns,
           certifications: certs,
         };
