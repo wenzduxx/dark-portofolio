@@ -223,7 +223,7 @@ export default function ResumeEditor({ onSaved }: { onSaved?: () => void }) {
           </BOField>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <ImageUpload value={form.profile_image} onChange={set('profile_image')} label="Profile Photo" />
+              <ImageUpload value={form.profile_image} onChange={set('profile_image')} label="Profile Photo" bucket="resume" />
             </div>
             <div className="space-y-4">
               <BOField label="Location">

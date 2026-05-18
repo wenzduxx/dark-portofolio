@@ -133,7 +133,7 @@ export default function AcademicEditor({ onSaved }: { onSaved?: () => void }) {
         </div>
       </BOCard>
 
-      <BOCard><ImageUpload value={form.hero_image} onChange={set('hero_image')} label="Hero Image" /></BOCard>
+      <BOCard><ImageUpload value={form.hero_image} onChange={set('hero_image')} label="Hero Image" bucket="academic" /></BOCard>
       <BOCard><ArrayEditor label="Activities" items={activities} onChange={setActivities} placeholder="Research Assistant..." addLabel="Add activity" /></BOCard>
       <BOCard><PairEditor label="Metrics" items={metrics} onChange={setMetrics} labelPlaceholder="GPA" valuePlaceholder="3.9/4.0" addLabel="Add metric" /></BOCard>
 
@@ -144,7 +144,7 @@ export default function AcademicEditor({ onSaved }: { onSaved?: () => void }) {
             <div className="flex justify-between mb-2"><span className="text-xs text-[#555]">Photo {i + 1}</span>
               <button onClick={() => setGallery(gallery.filter((_, idx) => idx !== i))} className="text-[#555] hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
             </div>
-            <ImageUpload value={g.url} onChange={url => { const n = [...gallery]; n[i].url = url; setGallery(n); }} label="Image" />
+            <ImageUpload value={g.url} onChange={url => { const n = [...gallery]; n[i].url = url; setGallery(n); }} label="Image" bucket="academic" />
             <div className="mt-2"><BOInput value={g.caption} onChange={cap => { const n = [...gallery]; n[i].caption = cap; setGallery(n); }} placeholder="Caption" /></div>
           </div>
         ))}

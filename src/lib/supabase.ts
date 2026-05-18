@@ -9,6 +9,22 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-project-ref')
 
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
 
-export const STORAGE_URL = supabaseUrl
-  ? `${supabaseUrl}/storage/v1/object/public/portfolio-images`
-  : '';
+export const deleteStorageFile = async (url: string) => {
+  if (!url || !supabaseUrl) return;
+  
+  const prefix = `${supabaseUrl}/storage/v1/object/public/`;
+  if (url.startsWith(prefix)) {
+    const relativePath = url.slice(prefix.length); // "[bucket]/[path]"
+    const firstSlash = relativePath.indexOf('/');
+    if (firstSlash !== -1) {
+      const bucket = relativePath.slice(0, firstSlash);
+      const path = relativePath.slice(firstSlash + 1);
+      
+      try {
+        await supabase.storage.from(bucket).remove([path]);
+      } catch (e) {
+        console.error('Failed to delete old storage file:', e);
+      }
+    }
+  }
+};

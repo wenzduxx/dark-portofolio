@@ -190,7 +190,7 @@ export default function ProjectsEditor({ onSaved }: { onSaved?: () => void }) {
 
       <BOCard>
         <h3 className="text-sm font-semibold text-[#e5e5e5] mb-4">Hero Image</h3>
-        <ImageUpload value={form.hero_image} onChange={set('hero_image')} label="Hero Image URL" />
+        <ImageUpload value={form.hero_image} onChange={set('hero_image')} label="Hero Image URL" bucket="projects" />
       </BOCard>
 
       <BOCard>
@@ -260,7 +260,7 @@ export default function ProjectsEditor({ onSaved }: { onSaved?: () => void }) {
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
-            <ImageUpload value={v.url} onChange={url => { const n = [...visuals]; n[i].url = url; setVisuals(n); }} label="Image URL" />
+            <ImageUpload value={v.url} onChange={url => { const n = [...visuals]; n[i].url = url; setVisuals(n); }} label="Image URL" bucket="projects" />
             <div className="mt-2">
               <BOInput value={v.caption} onChange={cap => { const n = [...visuals]; n[i].caption = cap; setVisuals(n); }} placeholder="Image caption" />
             </div>
