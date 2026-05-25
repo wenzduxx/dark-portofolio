@@ -5,6 +5,8 @@
 
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { LoadingScreen } from './components/LoadingScreen';
 import { Navbar } from './components/Navbar';
 import { Contact } from './components/Contact';
@@ -51,6 +53,8 @@ function PortfolioApp() {
 export default function App() {
   return (
     <Router>
+      <Analytics />
+      <SpeedInsights />
       <Routes>
         {/* Back Office — standalone, no portfolio wrapper */}
         <Route path="/bts-porto/*" element={<BackOffice />} />
