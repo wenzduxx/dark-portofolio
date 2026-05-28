@@ -8,15 +8,16 @@ interface BackgroundMusicContextType {
   isMuted: boolean;
   toggleMute: () => void;
   hasAudioAvailable: boolean;
+  getAnalyserData: () => Uint8Array<ArrayBuffer> | null;
 }
 
 const STORAGE_KEY = 'bg-music-muted';
-const CROSSFADE_MS = 600;
 
 const BackgroundMusicContext = createContext<BackgroundMusicContextType>({
   isMuted: false,
   toggleMute: () => {},
   hasAudioAvailable: false,
+  getAnalyserData: () => null,
 });
 
 const getInitialMuted = (): boolean => {
@@ -44,7 +45,10 @@ const routeToSlot = (pathname: string): MusicSlot => {
 
 export function BackgroundMusicProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const fadeRafRef = useRef<number | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceConnectedRef = useRef(false);
+  const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const location = useLocation();
 
   const [isMuted, setIsMuted] = useState<boolean>(getInitialMuted);
@@ -54,15 +58,64 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
     home: null, work: null, resume: null,
   });
 
-  // Mirror isMuted into a ref so the global interaction listener can read the
-  // latest value without having to re-register on every mute toggle.
+  // Mirror isMuted into a ref so the global interaction listener reads the
+  // latest value without re-registering on every mute toggle.
   const isMutedRef = useRef(isMuted);
   useEffect(() => { isMutedRef.current = isMuted; }, [isMuted]);
+
+  // Lazily build the AudioContext → MediaElementSource → AnalyserNode graph.
+  // Once connected, the audio element's output is rerouted through the context
+  // (so we must keep the context resumed for sound). Must be called from a
+  // user-gesture handler the first time.
+  const ensureAnalyser = useCallback(() => {
+    if (sourceConnectedRef.current) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+    try {
+      const Ctor = window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctor) return;
+      const ctx: AudioContext = new Ctor();
+      const source = ctx.createMediaElementSource(audio);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 64;            // 32 frequency bins, low CPU
+      analyser.smoothingTimeConstant = 0.75;
+      source.connect(analyser);
+      analyser.connect(ctx.destination);
+      audioContextRef.current = ctx;
+      analyserRef.current = analyser;
+      sourceConnectedRef.current = true;
+    } catch {
+      // Tainted source (CORS) or element already connected — silently fail.
+      // Audio still plays; only the visualizer is disabled.
+    }
+  }, []);
+
+  // Snapshot of current frequency data — called by the visualizer in its rAF loop.
+  const getAnalyserData = useCallback((): Uint8Array<ArrayBuffer> | null => {
+    const analyser = analyserRef.current;
+    if (!analyser) return null;
+    if (!dataArrayRef.current || dataArrayRef.current.length !== analyser.frequencyBinCount) {
+      dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount);
+    }
+    analyser.getByteFrequencyData(dataArrayRef.current);
+    return dataArrayRef.current;
+  }, []);
+
+  // Close AudioContext on unmount
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+        analyserRef.current = null;
+        sourceConnectedRef.current = false;
+      }
+    };
+  }, []);
 
   // Fetch initial URLs and subscribe to realtime updates of site_settings
   useEffect(() => {
     let mounted = true;
-
     const fetchSettings = async () => {
       const { data } = await supabase
         .from('site_settings')
@@ -75,14 +128,11 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
         resume: data.resume_music_url || null,
       });
     };
-
     fetchSettings();
-
     const channel = supabase
       .channel('bg-music-settings')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, fetchSettings)
       .subscribe();
-
     return () => {
       mounted = false;
       supabase.removeChannel(channel);
@@ -94,36 +144,14 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
   const targetUrl = urls[slot] || urls.home || null;
   const hasAudioAvailable = targetUrl !== null && !isErrored;
 
-  // Reset error state whenever target URL changes (give the new URL a chance)
+  // Reset error state whenever target URL changes
   useEffect(() => {
     setIsErrored(false);
   }, [targetUrl]);
 
-  // Volume ramp via requestAnimationFrame
-  const fadeTo = useCallback((target: number, durationMs: number, onDone?: () => void) => {
-    const audio = audioRef.current;
-    if (!audio) { onDone?.(); return; }
-    if (fadeRafRef.current !== null) cancelAnimationFrame(fadeRafRef.current);
-
-    const start = audio.volume;
-    const startTime = performance.now();
-    const step = (now: number) => {
-      const t = Math.min(1, (now - startTime) / Math.max(1, durationMs));
-      audio.volume = start + (target - start) * t;
-      if (t < 1) {
-        fadeRafRef.current = requestAnimationFrame(step);
-      } else {
-        fadeRafRef.current = null;
-        onDone?.();
-      }
-    };
-    fadeRafRef.current = requestAnimationFrame(step);
-  }, []);
-
-  // Sync audio src to target URL — no-op if same, crossfade if different.
-  // Audio element starts HTML-muted (allowed by all browsers' autoplay
-  // policy) so play() always succeeds; we just flip audio.muted=false later
-  // on the first user interaction.
+  // Sync audio src to target URL. Audio starts HTML-muted so play() is always
+  // safe to call (no autoplay block). No fade ramps — the source files already
+  // have their own fade-in baked in.
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -131,78 +159,42 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
     if (targetUrl === currentUrl) return;
 
     if (targetUrl === null) {
-      const done = () => {
-        audio.pause();
-        audio.removeAttribute('src');
-        audio.load();
-        setCurrentUrl(null);
-      };
-      if (audio.muted || isMuted || currentUrl === null) done();
-      else fadeTo(0, CROSSFADE_MS, done);
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
+      setCurrentUrl(null);
       return;
     }
 
-    const swap = (fadeIn: boolean) => {
-      audio.src = targetUrl;
-      audio.load();
-      audio.play()
-        .then(() => {
-          if (fadeIn && !audio.muted && !isMuted) fadeTo(1, CROSSFADE_MS);
-        })
-        .catch(() => {
-          // Should not happen because audio.muted=true allows autoplay,
-          // but if it does (e.g. src error), the onError handler picks it up.
-        });
-      setCurrentUrl(targetUrl);
-    };
-
-    if (currentUrl === null) {
-      // Initial start — volume stays at 0; the first-interaction handler
-      // will unmute and fade volume up.
-      audio.volume = 0;
-      swap(false);
-    } else if (audio.muted || isMuted) {
-      // Audio is silent either way (HTML-muted or user-muted) — instant swap
-      swap(false);
-    } else {
-      // Currently audible — crossfade
-      fadeTo(0, CROSSFADE_MS, () => swap(true));
-    }
-  }, [targetUrl, currentUrl, isMuted, isErrored, fadeTo]);
+    audio.src = targetUrl;
+    audio.load();
+    audio.play().catch(() => { /* should not happen — element is muted */ });
+    setCurrentUrl(targetUrl);
+  }, [targetUrl, currentUrl, isErrored]);
 
   // First-interaction handler: flips audio.muted=false so the user can finally
-  // hear the music that has been playing silently since page load.
-  //
-  // Browser autoplay reality check:
-  //   - audio.muted=true → play() ALWAYS works (no user activation needed)
-  //   - audio.muted=false without user activation → browser pauses the audio
-  //
-  // So we listen broadly (click, keydown, touch, pointer, scroll, wheel,
-  // mousemove). The "activation-granting" events (click/keydown/touchstart/
-  // pointerdown) unmute successfully. The "soft" events (scroll/wheel/
-  // mousemove) attempt to unmute — if browser rejects, we revert to muted
-  // and wait for a real activation event. Either way, audio keeps playing.
+  // hear the music that has been playing silently since page load. Also
+  // initializes the Web Audio graph for the visualizer.
   useEffect(() => {
     let attemptInProgress = false;
 
     const tryUnmute = () => {
       const audio = audioRef.current;
       if (!audio) return;
-      if (!audio.muted) return;            // already unmuted — done
-      if (isMutedRef.current) return;      // user wants it muted — respect
-      if (attemptInProgress) return;       // avoid overlapping attempts
+      if (!audio.muted) return;
+      if (isMutedRef.current) return;
+      if (attemptInProgress) return;
 
       attemptInProgress = true;
       audio.muted = false;
       audio.play()
         .then(() => {
-          fadeTo(1, CROSSFADE_MS);
+          ensureAnalyser();
+          audioContextRef.current?.resume().catch(() => {});
           attemptInProgress = false;
         })
         .catch(() => {
-          // Browser rejected the unmute (no user activation yet). Revert to
-          // muted-autoplay so audio keeps playing silently, and wait for the
-          // next event — eventually the user will click/tap, which will work.
+          // Browser rejected unmute (no user activation). Revert and wait.
           audio.muted = true;
           audio.play().catch(() => {});
           attemptInProgress = false;
@@ -219,7 +211,7 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
         document.removeEventListener(e, tryUnmute, true);
       });
     };
-  }, [fadeTo]);
+  }, [ensureAnalyser]);
 
   const toggleMute = useCallback(() => {
     setIsMuted(prev => {
@@ -227,27 +219,25 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
       try { localStorage.setItem(STORAGE_KEY, String(next)); } catch { /* ignore */ }
       const audio = audioRef.current;
       if (audio) {
-        if (next) {
-          // Muting — ramp volume down (audio.muted stays as-is; volume=0 is enough)
-          fadeTo(0, CROSSFADE_MS);
-        } else {
-          // Unmuting — ensure audio.muted=false, ensure playing, ramp volume up
-          audio.muted = false;
+        audio.muted = next;
+        if (!next) {
           audio.play().catch(() => {});
-          fadeTo(1, CROSSFADE_MS);
+          ensureAnalyser();
+          audioContextRef.current?.resume().catch(() => {});
         }
       }
       return next;
     });
-  }, [fadeTo]);
+  }, [ensureAnalyser]);
 
   return (
-    <BackgroundMusicContext.Provider value={{ isMuted, toggleMute, hasAudioAvailable }}>
+    <BackgroundMusicContext.Provider value={{ isMuted, toggleMute, hasAudioAvailable, getAnalyserData }}>
       <audio
         ref={audioRef}
         loop
         preload="auto"
         muted
+        crossOrigin="anonymous"
         style={{ display: 'none' }}
         onError={() => setIsErrored(true)}
       />
