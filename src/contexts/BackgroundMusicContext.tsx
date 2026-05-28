@@ -54,6 +54,11 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
     home: null, work: null, resume: null,
   });
 
+  // Mirror isMuted into a ref so the global interaction listener can read the
+  // latest value without having to re-register on every mute toggle.
+  const isMutedRef = useRef(isMuted);
+  useEffect(() => { isMutedRef.current = isMuted; }, [isMuted]);
+
   // Fetch initial URLs and subscribe to realtime updates of site_settings
   useEffect(() => {
     let mounted = true;
@@ -84,7 +89,7 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
     };
   }, []);
 
-  // Resolve target URL
+  // Resolve target URL via the fallback chain
   const slot = routeToSlot(location.pathname);
   const targetUrl = urls[slot] || urls.home || null;
   const hasAudioAvailable = targetUrl !== null && !isErrored;
@@ -115,12 +120,14 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
     fadeRafRef.current = requestAnimationFrame(step);
   }, []);
 
-  // Sync audio src to target URL — no-op if same, crossfade if different
+  // Sync audio src to target URL — no-op if same, crossfade if different.
+  // Audio element starts HTML-muted (allowed by all browsers' autoplay
+  // policy) so play() always succeeds; we just flip audio.muted=false later
+  // on the first user interaction.
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (isErrored) return; // do not retry a failed URL
-
+    if (isErrored) return;
     if (targetUrl === currentUrl) return;
 
     if (targetUrl === null) {
@@ -130,77 +137,109 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
         audio.load();
         setCurrentUrl(null);
       };
-      if (isMuted || currentUrl === null) done();
+      if (audio.muted || isMuted || currentUrl === null) done();
       else fadeTo(0, CROSSFADE_MS, done);
       return;
     }
 
-    const swap = (fadeInAfterPlay: boolean) => {
+    const swap = (fadeIn: boolean) => {
       audio.src = targetUrl;
       audio.load();
       audio.play()
         .then(() => {
-          if (fadeInAfterPlay && !isMuted) fadeTo(1, CROSSFADE_MS);
+          if (fadeIn && !audio.muted && !isMuted) fadeTo(1, CROSSFADE_MS);
         })
         .catch(() => {
-          // Autoplay blocked — the interaction listener below will retry and fade in.
+          // Should not happen because audio.muted=true allows autoplay,
+          // but if it does (e.g. src error), the onError handler picks it up.
         });
       setCurrentUrl(targetUrl);
     };
 
     if (currentUrl === null) {
-      // Initial load: start volume at 0, no fade — interaction listener fades in once play succeeds.
+      // Initial start — volume stays at 0; the first-interaction handler
+      // will unmute and fade volume up.
       audio.volume = 0;
       swap(false);
-    } else if (isMuted) {
+    } else if (audio.muted || isMuted) {
+      // Audio is silent either way (HTML-muted or user-muted) — instant swap
       swap(false);
     } else {
+      // Currently audible — crossfade
       fadeTo(0, CROSSFADE_MS, () => swap(true));
     }
   }, [targetUrl, currentUrl, isMuted, isErrored, fadeTo]);
 
-  // Auto-play on first user interaction (click, keydown, touch, scroll, pointer).
-  // Works around browser autoplay restrictions without requiring the user to
-  // click the music toggle specifically — any interaction triggers playback,
-  // and a smooth 600ms fade-in lands the volume at its target.
+  // First-interaction handler: flips audio.muted=false so the user can finally
+  // hear the music that has been playing silently since page load.
+  //
+  // Browser autoplay reality check:
+  //   - audio.muted=true → play() ALWAYS works (no user activation needed)
+  //   - audio.muted=false without user activation → browser pauses the audio
+  //
+  // So we listen broadly (click, keydown, touch, pointer, scroll, wheel,
+  // mousemove). The "activation-granting" events (click/keydown/touchstart/
+  // pointerdown) unmute successfully. The "soft" events (scroll/wheel/
+  // mousemove) attempt to unmute — if browser rejects, we revert to muted
+  // and wait for a real activation event. Either way, audio keeps playing.
   useEffect(() => {
-    const tryPlay = () => {
+    let attemptInProgress = false;
+
+    const tryUnmute = () => {
       const audio = audioRef.current;
       if (!audio) return;
-      if (!audio.paused) return;
+      if (!audio.muted) return;            // already unmuted — done
+      if (isMutedRef.current) return;      // user wants it muted — respect
+      if (attemptInProgress) return;       // avoid overlapping attempts
+
+      attemptInProgress = true;
+      audio.muted = false;
       audio.play()
         .then(() => {
-          if (!isMuted) fadeTo(1, CROSSFADE_MS);
+          fadeTo(1, CROSSFADE_MS);
+          attemptInProgress = false;
         })
-        .catch(() => { /* still blocked; another event will retry */ });
+        .catch(() => {
+          // Browser rejected the unmute (no user activation yet). Revert to
+          // muted-autoplay so audio keeps playing silently, and wait for the
+          // next event — eventually the user will click/tap, which will work.
+          audio.muted = true;
+          audio.play().catch(() => {});
+          attemptInProgress = false;
+        });
     };
 
-    document.addEventListener('click', tryPlay, true);
-    document.addEventListener('keydown', tryPlay, true);
-    document.addEventListener('touchstart', tryPlay, { capture: true, passive: true });
-    document.addEventListener('pointerdown', tryPlay, true);
-    document.addEventListener('scroll', tryPlay, { capture: true, passive: true });
+    const events = ['click', 'keydown', 'touchstart', 'pointerdown', 'scroll', 'wheel', 'mousemove'] as const;
+    events.forEach(e => {
+      document.addEventListener(e, tryUnmute, { capture: true, passive: true });
+    });
 
     return () => {
-      document.removeEventListener('click', tryPlay, true);
-      document.removeEventListener('keydown', tryPlay, true);
-      document.removeEventListener('touchstart', tryPlay, true);
-      document.removeEventListener('pointerdown', tryPlay, true);
-      document.removeEventListener('scroll', tryPlay, true);
+      events.forEach(e => {
+        document.removeEventListener(e, tryUnmute, true);
+      });
     };
-  }, [isMuted, fadeTo]);
+  }, [fadeTo]);
 
   const toggleMute = useCallback(() => {
     setIsMuted(prev => {
       const next = !prev;
       try { localStorage.setItem(STORAGE_KEY, String(next)); } catch { /* ignore */ }
-      if (audioRef.current && currentUrl) {
-        audioRef.current.play().catch(() => {});
-        fadeTo(next ? 0 : 1, CROSSFADE_MS);
+      const audio = audioRef.current;
+      if (audio) {
+        if (next) {
+          // Muting — ramp volume down (audio.muted stays as-is; volume=0 is enough)
+          fadeTo(0, CROSSFADE_MS);
+        } else {
+          // Unmuting — ensure audio.muted=false, ensure playing, ramp volume up
+          audio.muted = false;
+          audio.play().catch(() => {});
+          fadeTo(1, CROSSFADE_MS);
+        }
       }
       return next;
     });
-  }, [currentUrl, fadeTo]);
+  }, [fadeTo]);
 
   return (
     <BackgroundMusicContext.Provider value={{ isMuted, toggleMute, hasAudioAvailable }}>
@@ -208,6 +247,7 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
         ref={audioRef}
         loop
         preload="auto"
+        muted
         style={{ display: 'none' }}
         onError={() => setIsErrored(true)}
       />
