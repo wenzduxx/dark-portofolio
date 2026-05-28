@@ -4,6 +4,7 @@ import { ArrowUpRight } from 'lucide-react';
 import GlassSurface from './GlassSurface';
 import { usePortfolioData } from '../contexts/PortfolioDataContext';
 import { MusicToggle } from './MusicToggle';
+import { MusicVisualizer } from './MusicVisualizer';
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -69,8 +70,11 @@ export function Navbar() {
           {/* Divider */}
           <div className="w-px h-5 bg-white/10 mx-3" />
 
-          {/* Music toggle */}
-          <MusicToggle />
+          {/* Music visualizer + toggle */}
+          <div className="flex items-center gap-1.5">
+            <MusicVisualizer />
+            <MusicToggle />
+          </div>
 
           {/* "Say hi" button */}
           <a 
