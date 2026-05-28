@@ -28,6 +28,7 @@ export interface HomeJournalEntry {
   date: string;
   readTime: string;
   image: string;
+  kind?: 'journal' | 'activity';
 }
 
 export interface StatItem {
@@ -55,6 +56,7 @@ export interface WorkActivity {
   category: string;
   date: string;
   image: string;
+  kind?: 'journal' | 'activity';
 }
 
 export interface EducationItem {
@@ -329,9 +331,10 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         { data: projectPhases },
         { data: projectMetrics },
         { data: projectVisuals },
-        { data: journalEntries },
-        { data: journalContent },
-        { data: journalTags },
+        { data: posts },
+        { data: postParagraphs },
+        { data: postTags },
+        { data: postLinks },
         { data: experiences },
         { data: expResp },
         { data: expTech },
@@ -341,8 +344,6 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         { data: acadActivities },
         { data: acadMetrics },
         { data: acadGallery },
-        { data: activities },
-        { data: activityLinks },
         { data: resumeSettings },
         { data: resumeSkills },
         { data: resumeCertifications },
@@ -360,9 +361,10 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         supabase.from('project_methodology_phases').select('*').order('sort_order'),
         supabase.from('project_metrics').select('*').order('sort_order'),
         supabase.from('project_visuals').select('*').order('sort_order'),
-        supabase.from('journal_entries').select('*').order('sort_order'),
-        supabase.from('journal_content').select('*').order('sort_order'),
-        supabase.from('journal_tags').select('*'),
+        supabase.from('posts').select('*').order('sort_order'),
+        supabase.from('post_paragraphs').select('*').order('sort_order'),
+        supabase.from('post_tags').select('*'),
+        supabase.from('post_links').select('*').order('sort_order'),
         supabase.from('experiences').select('*').order('sort_order'),
         supabase.from('experience_responsibilities').select('*').order('sort_order'),
         supabase.from('experience_technologies').select('*').order('sort_order'),
@@ -372,8 +374,6 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         supabase.from('academic_activities').select('*').order('sort_order'),
         supabase.from('academic_metrics').select('*').order('sort_order'),
         supabase.from('academic_gallery').select('*').order('sort_order'),
-        supabase.from('activities').select('*').order('sort_order'),
-        supabase.from('activity_links').select('*').order('sort_order'),
         supabase.from('resume_settings').select('*').single(),
         supabase.from('resume_skills').select('*').order('sort_order'),
         supabase.from('resume_certifications').select('*').order('sort_order'),
@@ -429,17 +429,24 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
           }))
         : DEFAULT_CONTEXT.homeProjects;
 
-      // ── Home Journal (featured, with fallback) ────────────────────────────
-      const featuredJournal = (journalEntries || []).filter((e: any) => e.is_featured);
-      const displayJournal = featuredJournal.length > 0 ? featuredJournal : (journalEntries || []).slice(0, 4);
-      const homeJournal = displayJournal.length > 0
-        ? displayJournal.sort((a: any, b: any) => a.sort_order - b.sort_order).map((e: any) => ({
-            id: e.slug,
-            title: e.title,
-            date: e.date,
-            readTime: e.reading_time,
-            image: e.hero_image,
-          }))
+      // ── Home Journal (featured posts — mixed journal+activity, with fallback) ──
+      const allPosts = posts || [];
+      const featuredPosts = allPosts.filter((p: any) => p.is_featured);
+      const displayPosts = featuredPosts.length > 0 ? featuredPosts : allPosts.slice(0, 4);
+      const homeJournal = displayPosts.length > 0
+        ? displayPosts
+            .slice()
+            .sort((a: any, b: any) => a.sort_order - b.sort_order)
+            .map((p: any) => ({
+              id: p.slug,
+              title: p.title,
+              date: p.date,
+              readTime: p.kind === 'journal'
+                ? (p.reading_time || '')
+                : (p.activity_type || ''),
+              image: p.cover_image || '',
+              kind: p.kind as 'journal' | 'activity',
+            }))
         : DEFAULT_CONTEXT.homeJournal;
 
       // ── Contact ───────────────────────────────────────────────────────────
@@ -490,24 +497,22 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         }
       }
 
-      // ── Journal map (JournalDetail.tsx shape) ─────────────────────────────
+      // ── Journal map (JournalDetail.tsx shape, derived from posts) ─────────
       const journalMap: Record<string, JournalEntry> = {};
-      if (journalEntries) {
-        for (const e of journalEntries) {
-          const content = (journalContent || []).filter((c: any) => c.entry_id === e.id).map((c: any) => c.paragraph);
-          const tags = (journalTags || []).filter((t: any) => t.entry_id === e.id).map((t: any) => t.tag);
-          journalMap[e.slug] = {
-            id: e.slug,
-            title: e.title,
-            category: e.category,
-            date: e.date,
-            readingTime: e.reading_time,
-            heroImage: e.hero_image,
-            excerpt: e.excerpt,
-            content,
-            tags,
-          };
-        }
+      for (const p of allPosts.filter((x: any) => x.kind === 'journal')) {
+        const content = (postParagraphs || []).filter((c: any) => c.post_id === p.id).map((c: any) => c.paragraph);
+        const tags = (postTags || []).filter((t: any) => t.post_id === p.id).map((t: any) => t.tag);
+        journalMap[p.slug] = {
+          id: p.slug,
+          title: p.title,
+          category: p.category,
+          date: p.date,
+          readingTime: p.reading_time,
+          heroImage: p.cover_image,
+          excerpt: p.excerpt,
+          content,
+          tags,
+        };
       }
 
       // ── Experiences map (ExperienceDetail.tsx shape) ──────────────────────
@@ -538,33 +543,35 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         }
       }
 
-      // ── Activities map (ActivityDetail.tsx shape) ─────────────────────────
+      // ── Activities map (ActivityDetail.tsx shape, derived from posts) ─────
       const activitiesMap: Record<string, Activity> = {};
-      const activitiesList: WorkActivity[] = [];
-      if (activities) {
-        for (const a of activities) {
-          const links = (activityLinks || []).filter((l: any) => l.activity_id === a.id).map((l: any) => ({ label: l.label, url: l.url }));
-          const entry: Activity = {
-            id: a.slug,
-            title: a.title,
-            type: a.type,
-            status: a.status,
-            date: a.date,
-            description: a.description,
-            longDescription: a.long_description,
-            impact: a.impact || undefined,
-            links: links.length > 0 ? links : undefined,
-          };
-          activitiesMap[a.slug] = entry;
-          activitiesList.push({
-            id: a.slug,
-            title: a.title,
-            category: a.type,
-            date: a.date,
-            image: a.image_url || 'https://images.unsplash.com/photo-1545235617-9465d2a55698?auto=format&fit=crop&q=80&w=600',
-          });
-        }
+      for (const p of allPosts.filter((x: any) => x.kind === 'activity')) {
+        const links = (postLinks || []).filter((l: any) => l.post_id === p.id).map((l: any) => ({ label: l.label, url: l.url }));
+        activitiesMap[p.slug] = {
+          id: p.slug,
+          title: p.title,
+          type: p.activity_type,
+          status: p.status,
+          date: p.date,
+          description: p.excerpt,
+          longDescription: p.long_description,
+          impact: p.impact || undefined,
+          links: links.length > 0 ? links : undefined,
+        };
       }
+
+      // ── Activities list (Work.tsx shape) — ALL posts (journal+activity mixed) ──
+      const activitiesList: WorkActivity[] = allPosts
+        .slice()
+        .sort((a: any, b: any) => a.sort_order - b.sort_order)
+        .map((p: any) => ({
+          id: p.slug,
+          title: p.title,
+          category: p.kind === 'journal' ? (p.category || 'Journal') : (p.activity_type || 'Activity'),
+          date: p.date,
+          image: p.cover_image || 'https://images.unsplash.com/photo-1545235617-9465d2a55698?auto=format&fit=crop&q=80&w=600',
+          kind: p.kind as 'journal' | 'activity',
+        }));
 
       // ── Academics map (AcademicDetail.tsx shape) ──────────────────────────
       const academicsMap: Record<string, AcademicEntry> = {};
@@ -695,10 +702,10 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
     const WATCHED_TABLES = [
       'site_settings', 'hero_settings', 'hero_roles', 'nav_links', 'stats',
       'contact_settings', 'projects', 'project_tech_stack', 'project_methodology_phases',
-      'project_metrics', 'project_visuals', 'journal_entries', 'journal_content',
-      'journal_tags', 'experiences', 'experience_responsibilities', 'experience_technologies',
-      'experience_metrics', 'experience_gallery', 'academics', 'academic_activities',
-      'academic_metrics', 'academic_gallery', 'activities', 'activity_links',
+      'project_metrics', 'project_visuals', 'posts', 'post_paragraphs',
+      'post_tags', 'post_links', 'experiences', 'experience_responsibilities',
+      'experience_technologies', 'experience_metrics', 'experience_gallery',
+      'academics', 'academic_activities', 'academic_metrics', 'academic_gallery',
       'resume_settings', 'resume_skills', 'resume_certifications',
       'clients', 'explorations_gallery'
     ];

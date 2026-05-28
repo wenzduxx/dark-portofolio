@@ -135,9 +135,9 @@ export default function Work() {
         </div>
         <div ref={horizontalRef} className="flex gap-8 px-6 md:px-12 w-max mx-auto md:ml-auto">
           {ACTIVITIES_LIST.map((post) => (
-            <Link 
-              key={post.id} 
-              to={`/activity/${post.id}`}
+            <Link
+              key={post.id}
+              to={`/${post.kind ?? 'activity'}/${post.id}`}
               className="w-[350px] md:w-[450px] group flex flex-col shrink-0"
             >
               <div className="aspect-[16/10] overflow-hidden rounded-3xl bg-stroke mb-8">

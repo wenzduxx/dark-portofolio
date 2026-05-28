@@ -57,8 +57,8 @@ export function Journal() {
               animated
               colors={['#c084fc', '#f472b6', '#38bdf8']}
             >
-              <Link 
-                to={`/journal/${entry.id}`}
+              <Link
+                to={`/${entry.kind ?? 'journal'}/${entry.id}`}
                 className="group flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 p-4 rounded-[40px] sm:rounded-full transition-colors duration-300 w-full h-full"
               >
                 <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 overflow-hidden rounded-full self-start sm:self-auto">

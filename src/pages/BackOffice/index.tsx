@@ -5,10 +5,9 @@ import Sidebar from './components/Sidebar';
 import SiteSettingsSection from './sections/SiteSettings';
 import HeroEditor from './sections/HeroEditor';
 import ProjectsEditor from './sections/ProjectsEditor';
-import JournalEditor from './sections/JournalEditor';
+import PostsEditor from './sections/PostsEditor';
 import ExperienceEditor from './sections/ExperienceEditor';
 import AcademicEditor from './sections/AcademicEditor';
-import ActivitiesEditor from './sections/ActivitiesEditor';
 import StatsEditor from './sections/StatsEditor';
 import ContactEditor from './sections/ContactEditor';
 import NavigationEditor from './sections/NavigationEditor';
@@ -17,8 +16,8 @@ import ExplorationsEditor from './sections/ExplorationsEditor';
 import { Menu, X, ExternalLink, RefreshCw, Layout } from 'lucide-react';
 
 export type BOSection =
-  | 'site-settings' | 'hero' | 'projects' | 'journal'
-  | 'experience' | 'academic' | 'activities'
+  | 'site-settings' | 'hero' | 'projects' | 'posts'
+  | 'experience' | 'academic'
   | 'stats' | 'navigation' | 'contact' | 'resume' | 'explorations';
 
 export default function BackOffice() {
@@ -88,10 +87,9 @@ export default function BackOffice() {
     'explorations': '/',
     'resume': '/resume',
     'projects': '/work',
-    'journal': '/',
+    'posts': '/',
     'experience': '/work',
     'academic': '/resume',
-    'activities': '/work',
   };
 
   const handleSectionChange = (section: BOSection) => {
@@ -103,10 +101,9 @@ export default function BackOffice() {
     'site-settings': <SiteSettingsSection onSaved={refreshIframe} />,
     'hero': <HeroEditor onSaved={refreshIframe} />,
     'projects': <ProjectsEditor onSaved={refreshIframe} />,
-    'journal': <JournalEditor onSaved={refreshIframe} />,
+    'posts': <PostsEditor onSaved={refreshIframe} />,
     'experience': <ExperienceEditor onSaved={refreshIframe} />,
     'academic': <AcademicEditor onSaved={refreshIframe} />,
-    'activities': <ActivitiesEditor onSaved={refreshIframe} />,
     'stats': <StatsEditor onSaved={refreshIframe} />,
     'navigation': <NavigationEditor onSaved={refreshIframe} />,
     'contact': <ContactEditor onSaved={refreshIframe} />,
