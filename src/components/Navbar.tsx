@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import GlassSurface from './GlassSurface';
 import { usePortfolioData } from '../contexts/PortfolioDataContext';
+import { MusicToggle } from './MusicToggle';
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -67,6 +68,9 @@ export function Navbar() {
 
           {/* Divider */}
           <div className="w-px h-5 bg-white/10 mx-3" />
+
+          {/* Music toggle */}
+          <MusicToggle />
 
           {/* "Say hi" button */}
           <a 
