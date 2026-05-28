@@ -84,6 +84,33 @@ export default function SiteSettingsSection({ onSaved }: { onSaved?: () => void 
         </div>
       </BOCard>
 
+      <BOCard>
+        <h3 className="text-sm font-semibold text-[#e5e5e5] mb-1">Background Music</h3>
+        <p className="text-xs text-[#555] mb-4">
+          Upload audio for each section (max 50MB). Empty slots fall back to Home music. Leave all empty to disable.
+        </p>
+        <div className="space-y-4">
+          <AudioUpload
+            label="Home Music"
+            bucket="music-home"
+            value={form.home_music_url}
+            onChange={v => setForm(f => ({ ...f, home_music_url: v }))}
+          />
+          <AudioUpload
+            label="Work Music"
+            bucket="music-work"
+            value={form.work_music_url}
+            onChange={v => setForm(f => ({ ...f, work_music_url: v }))}
+          />
+          <AudioUpload
+            label="Resume Music"
+            bucket="music-resume"
+            value={form.resume_music_url}
+            onChange={v => setForm(f => ({ ...f, resume_music_url: v }))}
+          />
+        </div>
+      </BOCard>
+
       <BOSaveButton onClick={handleSave} loading={saving} saved={saved} />
 
       <BOCard>
