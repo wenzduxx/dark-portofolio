@@ -20,6 +20,7 @@ import ExperienceDetail from './pages/ExperienceDetail';
 import AcademicDetail from './pages/AcademicDetail';
 import BackOffice from './pages/BackOffice/index';
 import { PortfolioDataProvider } from './contexts/PortfolioDataContext';
+import { BackgroundMusicProvider } from './contexts/BackgroundMusicContext';
 
 function PortfolioApp() {
   const [isLoading, setIsLoading] = useState(true);
@@ -61,7 +62,9 @@ export default function App() {
         {/* Portfolio — wrapped in data provider */}
         <Route path="/*" element={
           <PortfolioDataProvider>
-            <PortfolioApp />
+            <BackgroundMusicProvider>
+              <PortfolioApp />
+            </BackgroundMusicProvider>
           </PortfolioDataProvider>
         } />
       </Routes>
