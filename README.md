@@ -1,7 +1,6 @@
 <div align="center">
 
-<!-- Banner: replace the URL below with your own hero screenshot (e.g. /docs/banner.png) -->
-<img width="1200" alt="Dark Portfolio — Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+<img width="1200" alt="Haris Ihsan Abadi — Dark Portfolio Hero" src="docs/banner.png" />
 
 <br />
 <br />
