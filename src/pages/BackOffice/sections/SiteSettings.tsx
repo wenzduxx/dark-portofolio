@@ -2,13 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { BOCard, BOSectionHeader, BOField, BOInput, BOSaveButton, BOAlert, useSaveState } from '../components/BOUtils';
 import ArrayEditor from '../components/ArrayEditor';
+import AudioUpload from '../components/AudioUpload';
 import { Save } from 'lucide-react';
 
 export default function SiteSettingsSection({ onSaved }: { onSaved?: () => void }) {
   const { saving, saved, error, withSave, setError } = useSaveState();
   const [form, setForm] = useState({
     owner_name: '', owner_initials: '', owner_email: '', owner_location: '',
-    logo_initials: '', collection_label: '', seo_title: '', seo_description: ''
+    logo_initials: '', collection_label: '', seo_title: '', seo_description: '',
+    home_music_url: '', work_music_url: '', resume_music_url: ''
   });
   const [id, setId] = useState('');
   const [clients, setClients] = useState<string[]>([]);
@@ -79,6 +81,33 @@ export default function SiteSettingsSection({ onSaved }: { onSaved?: () => void 
           <BOField label="Meta Description">
             <BOInput value={form.seo_description} onChange={set('seo_description')} placeholder="Creative designer & developer." rows={2} />
           </BOField>
+        </div>
+      </BOCard>
+
+      <BOCard>
+        <h3 className="text-sm font-semibold text-[#e5e5e5] mb-1">Background Music</h3>
+        <p className="text-xs text-[#555] mb-4">
+          Upload audio for each section (max 50MB). Empty slots fall back to Home music. Leave all empty to disable.
+        </p>
+        <div className="space-y-4">
+          <AudioUpload
+            label="Home Music"
+            bucket="music-home"
+            value={form.home_music_url}
+            onChange={v => setForm(f => ({ ...f, home_music_url: v }))}
+          />
+          <AudioUpload
+            label="Work Music"
+            bucket="music-work"
+            value={form.work_music_url}
+            onChange={v => setForm(f => ({ ...f, work_music_url: v }))}
+          />
+          <AudioUpload
+            label="Resume Music"
+            bucket="music-resume"
+            value={form.resume_music_url}
+            onChange={v => setForm(f => ({ ...f, resume_music_url: v }))}
+          />
         </div>
       </BOCard>
 

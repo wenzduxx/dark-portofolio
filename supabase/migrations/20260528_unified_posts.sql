@@ -159,22 +159,22 @@ ALTER PUBLICATION supabase_realtime ADD TABLE post_links;
 -- ============================================================================
 -- 6. Verification queries — run these AFTER the migration and compare counts
 -- ============================================================================
--- SELECT 'journal_entries' AS source, COUNT(*) FROM journal_entries
--- UNION ALL SELECT 'posts(journal)', COUNT(*) FROM posts WHERE kind = 'journal'
--- UNION ALL SELECT 'activities',     COUNT(*) FROM activities
--- UNION ALL SELECT 'posts(activity)', COUNT(*) FROM posts WHERE kind = 'activity'
--- UNION ALL SELECT 'journal_content', COUNT(*) FROM journal_content
--- UNION ALL SELECT 'post_paragraphs', COUNT(*) FROM post_paragraphs
--- UNION ALL SELECT 'journal_tags',    COUNT(*) FROM journal_tags
--- UNION ALL SELECT 'post_tags',       COUNT(*) FROM post_tags
--- UNION ALL SELECT 'activity_links',  COUNT(*) FROM activity_links
--- UNION ALL SELECT 'post_links',      COUNT(*) FROM post_links;
+SELECT 'journal_entries' AS source, COUNT(*) FROM journal_entries
+UNION ALL SELECT 'posts(journal)', COUNT(*) FROM posts WHERE kind = 'journal'
+UNION ALL SELECT 'activities',     COUNT(*) FROM activities
+UNION ALL SELECT 'posts(activity)', COUNT(*) FROM posts WHERE kind = 'activity'
+UNION ALL SELECT 'journal_content', COUNT(*) FROM journal_content
+UNION ALL SELECT 'post_paragraphs', COUNT(*) FROM post_paragraphs
+UNION ALL SELECT 'journal_tags',    COUNT(*) FROM journal_tags
+UNION ALL SELECT 'post_tags',       COUNT(*) FROM post_tags
+UNION ALL SELECT 'activity_links',  COUNT(*) FROM activity_links
+UNION ALL SELECT 'post_links',      COUNT(*) FROM post_links;
 
 -- ============================================================================
 -- 7. Drop old tables (RUN SEPARATELY, ONLY AFTER VERIFICATION)
 -- ============================================================================
--- DROP TABLE IF EXISTS activity_links  CASCADE;
--- DROP TABLE IF EXISTS journal_tags    CASCADE;
--- DROP TABLE IF EXISTS journal_content CASCADE;
--- DROP TABLE IF EXISTS activities      CASCADE;
--- DROP TABLE IF EXISTS journal_entries CASCADE;
+DROP TABLE IF EXISTS activity_links  CASCADE;
+DROP TABLE IF EXISTS journal_tags    CASCADE;
+DROP TABLE IF EXISTS journal_content CASCADE;
+DROP TABLE IF EXISTS activities      CASCADE;
+DROP TABLE IF EXISTS journal_entries CASCADE;
