@@ -2,13 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { BOCard, BOSectionHeader, BOField, BOInput, BOSaveButton, BOAlert, useSaveState } from '../components/BOUtils';
 import ArrayEditor from '../components/ArrayEditor';
+import AudioUpload from '../components/AudioUpload';
 import { Save } from 'lucide-react';
 
 export default function SiteSettingsSection({ onSaved }: { onSaved?: () => void }) {
   const { saving, saved, error, withSave, setError } = useSaveState();
   const [form, setForm] = useState({
     owner_name: '', owner_initials: '', owner_email: '', owner_location: '',
-    logo_initials: '', collection_label: '', seo_title: '', seo_description: ''
+    logo_initials: '', collection_label: '', seo_title: '', seo_description: '',
+    home_music_url: '', work_music_url: '', resume_music_url: ''
   });
   const [id, setId] = useState('');
   const [clients, setClients] = useState<string[]>([]);
