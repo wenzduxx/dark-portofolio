@@ -1,11 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Link } from 'react-router-dom';
-import { Award, BookOpen, ChevronRight, Download, Mail, Send, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react';
+import { Award, BookOpen, ChevronRight, Download, Mail, Send, CheckCircle2, AlertCircle, ExternalLink, ArrowUpRight } from 'lucide-react';
 import TextType from '../components/TextType';
 import { BeamsBackground } from '../components/ui/beams-background';
+import { PixelCanvas } from '../components/ui/pixel-canvas';
+import { HoverButton } from '../components/ui/hover-button';
 import { usePortfolioData } from '../contexts/PortfolioDataContext';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -119,6 +121,34 @@ export default function Resume() {
     if (formError) setFormError('');
   };
 
+  // Contact card 3D tilt. Mouse position drives rotateX/rotateY (springed);
+  // the card flattens to upright while a field is focused so typing stays
+  // comfortable. Fields sit raised above the surface via translateZ.
+  const [isTyping, setIsTyping] = useState(false);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const rotateX = useSpring(useTransform(mouseY, [-300, 300], [8, -8]), { stiffness: 120, damping: 20 });
+  const rotateY = useSpring(useTransform(mouseX, [-300, 300], [-8, 8]), { stiffness: 120, damping: 20 });
+
+  const handleCardMouseMove = (e: React.MouseEvent) => {
+    if (isTyping) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    mouseX.set(e.clientX - rect.left - rect.width / 2);
+    mouseY.set(e.clientY - rect.top - rect.height / 2);
+  };
+
+  const resetTilt = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
+  const handleFieldFocus = () => {
+    setIsTyping(true);
+    resetTilt();
+  };
+
+  const handleFieldBlur = () => setIsTyping(false);
+
   return (
     <div className="bg-bg min-h-screen pt-32 pb-20 relative">
       <BeamsBackground intensity="strong" />
@@ -135,16 +165,21 @@ export default function Resume() {
               <div className="w-8 h-px bg-stroke" />
               <span className="text-xs text-muted uppercase tracking-[0.3em]">About Me</span>
             </motion.div>
-            <h1 className="text-5xl md:text-7xl font-display italic text-text-primary leading-none mb-12">
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.1, delay: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
+              className="text-5xl md:text-7xl font-display italic text-text-primary leading-none mb-12 transform-gpu"
+            >
               {(() => {
                 const words = resumeData.pageHeading.split(' ');
                 if (words.length <= 1) return resumeData.pageHeading;
                 const lastWord = words.pop();
                 return <>{words.join(' ')} <span className="text-text-primary/40">{lastWord}</span></>;
               })()}
-            </h1>
-            
-            <motion.div 
+            </motion.h1>
+
+            <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1.2, delay: 0.2 }}
@@ -168,13 +203,31 @@ export default function Resume() {
           </div>
           <div className="md:col-span-12 lg:col-span-8">
             <div className="text-xl md:text-2xl text-text-primary/80 leading-relaxed max-w-3xl">
-              <p className="mb-8">
+              <motion.p
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.9, delay: 0.1, ease: [0.25, 0.1, 0.25, 1] }}
+                viewport={{ once: true, margin: "-80px" }}
+                className="mb-8 transform-gpu"
+              >
                 {resumeData.bioParagraph1}
-              </p>
-              <p className="mb-8">
+              </motion.p>
+              <motion.p
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.9, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                viewport={{ once: true, margin: "-80px" }}
+                className="mb-8 transform-gpu"
+              >
                 {resumeData.bioParagraph2}
-              </p>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-12 mt-12 pt-12 border-t border-stroke">
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.9, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+                viewport={{ once: true, margin: "-80px" }}
+                className="flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-12 mt-12 pt-12 border-t border-stroke transform-gpu"
+              >
                 <div>
                   <div className="text-[10px] text-muted uppercase tracking-[0.2em] mb-1">Current Location</div>
                   <div className="text-lg text-text-primary">{resumeData.location}</div>
@@ -202,7 +255,7 @@ export default function Resume() {
                     </div>
                   </a>
                 )}
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>
@@ -211,35 +264,64 @@ export default function Resume() {
       <div className="max-w-[1200px] mx-auto px-6 md:px-12">
         
         {/* Education Section */}
-        <section className="resume-reveal mb-32 relative z-10">
-          <div className="flex items-center gap-3 mb-12">
+        <section className="mb-32 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+            viewport={{ once: true, margin: "-80px" }}
+            className="flex items-center gap-3 mb-12 transform-gpu"
+          >
             <BookOpen className="w-5 h-5 text-muted" />
             <h2 className="text-xs text-muted uppercase tracking-[0.3em]">Academic Journey</h2>
             <div className="flex-1 h-px bg-stroke" />
-          </div>
-          
+          </motion.div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
             {EDUCATION.map((item, i) => (
-              <Link 
-                key={i} 
-                to={`/academic/${item.id}`}
-                className="group relative p-8 md:p-12 rounded-[3rem] bg-surface/50 border border-stroke hover:bg-surface transition-all duration-500 overflow-hidden block"
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.85, delay: i * 0.12, ease: [0.25, 0.1, 0.25, 1] }}
+                viewport={{ once: true, margin: "-80px" }}
+                className="transform-gpu"
               >
-                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <div className="text-[120px] font-display italic leading-none select-none">0{i+1}</div>
-                </div>
-                
-                <div className="relative z-10">
-                  <div className="text-xs font-mono text-muted mb-4 uppercase tracking-widest">{item.year}</div>
-                  <h3 className="text-3xl md:text-4xl lg:text-5xl font-display italic text-text-primary mb-4 leading-tight group-hover:text-white transition-colors">
-                    {item.degree}
-                  </h3>
-                  <div className="flex items-center gap-3 text-lg text-muted">
-                    <span className="w-6 h-px bg-stroke" />
-                    {item.school}
+                <Link
+                  to={`/academic/${item.id}`}
+                  className="group relative p-8 md:p-12 rounded-[3rem] bg-surface/50 border border-stroke hover:bg-surface hover:border-[#89AACC]/30 hover:-translate-y-1 transition-all duration-500 overflow-hidden block transform-gpu"
+                >
+                  {/* Interactive pixel-canvas hover animation (site-blue pixels) */}
+                  <PixelCanvas
+                    gap={8}
+                    speed={30}
+                    colors={["#e0eaf5", "#89AACC", "#4E85BF"]}
+                    variant="default"
+                    className="!absolute inset-0 z-0 opacity-60"
+                  />
+
+                  <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-[0.12] transition-all duration-500 group-hover:scale-110 group-hover:-translate-x-1 origin-top-right z-[1]">
+                    <div className="text-[120px] font-display italic leading-none select-none">0{i+1}</div>
                   </div>
-                </div>
-              </Link>
+
+                  <div className="relative z-10">
+                    <div className="text-xs font-mono text-muted mb-4 uppercase tracking-widest">{item.year}</div>
+                    <h3 className="text-3xl md:text-4xl lg:text-5xl font-display italic text-text-primary mb-4 leading-tight group-hover:text-white transition-colors">
+                      {item.degree}
+                    </h3>
+                    <div className="flex items-center gap-3 text-lg text-muted">
+                      <span className="h-px bg-stroke w-6 group-hover:w-10 group-hover:bg-[#89AACC] transition-all duration-500" />
+                      {item.school}
+                    </div>
+
+                    {/* Clickable affordance — visible by default (touch-safe), brightens on hover */}
+                    <div className="flex items-center gap-2 mt-8 text-xs uppercase tracking-[0.2em] text-muted/70 group-hover:text-text-primary transition-colors duration-300">
+                      <span>View details</span>
+                      <ArrowUpRight className="w-4 h-4 text-muted/70 group-hover:text-[#89AACC] group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300" />
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
             ))}
           </div>
         </section>
@@ -318,17 +400,52 @@ export default function Resume() {
           </section>
         </div>
 
-        {/* Contact Form */}
-        <section className="resume-reveal max-w-4xl mx-auto bg-surface border border-stroke rounded-[3rem] p-8 md:p-16 relative z-10">
-          <div className="text-center mb-12">
-            <div className="inline-flex p-3 rounded-full bg-stroke/30 mb-6">
-              <Mail className="w-6 h-6 text-text-primary/70" />
+        {/* Contact Form — glassmorphic 3D-tilt card with raised fields */}
+        <div className="resume-reveal max-w-4xl mx-auto relative z-10" style={{ perspective: 1500 }}>
+        <motion.section
+          onMouseMove={handleCardMouseMove}
+          onMouseLeave={resetTilt}
+          style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
+          className="group bg-surface/50 backdrop-blur-xl border border-stroke rounded-[3rem] p-8 md:p-16 relative overflow-hidden transition-shadow duration-500 focus-within:accent-glow"
+        >
+          {/* Traveling light beams along the border (site blue) */}
+          <div className="absolute -inset-px rounded-[3rem] overflow-hidden pointer-events-none z-0">
+            <motion.div
+              className="absolute top-0 left-0 h-[2px] w-[45%] bg-gradient-to-r from-transparent via-[#89AACC] to-transparent"
+              animate={{ left: ['-45%', '100%'] }}
+              transition={{ duration: 3, ease: 'easeInOut', repeat: Infinity, repeatDelay: 1 }}
+              style={{ opacity: 0.5 }}
+            />
+            <motion.div
+              className="absolute top-0 right-0 h-[45%] w-[2px] bg-gradient-to-b from-transparent via-[#89AACC] to-transparent"
+              animate={{ top: ['-45%', '100%'] }}
+              transition={{ duration: 3, ease: 'easeInOut', repeat: Infinity, repeatDelay: 1, delay: 0.75 }}
+              style={{ opacity: 0.5 }}
+            />
+            <motion.div
+              className="absolute bottom-0 right-0 h-[2px] w-[45%] bg-gradient-to-r from-transparent via-[#4E85BF] to-transparent"
+              animate={{ right: ['-45%', '100%'] }}
+              transition={{ duration: 3, ease: 'easeInOut', repeat: Infinity, repeatDelay: 1, delay: 1.5 }}
+              style={{ opacity: 0.5 }}
+            />
+            <motion.div
+              className="absolute bottom-0 left-0 h-[45%] w-[2px] bg-gradient-to-b from-transparent via-[#4E85BF] to-transparent"
+              animate={{ bottom: ['-45%', '100%'] }}
+              transition={{ duration: 3, ease: 'easeInOut', repeat: Infinity, repeatDelay: 1, delay: 2.25 }}
+              style={{ opacity: 0.5 }}
+            />
+          </div>
+
+          <div className="relative z-10 text-center mb-12" style={{ transform: 'translateZ(60px)' }}>
+            <div className="inline-flex p-3 rounded-full bg-stroke/30 mb-6 relative transition-all duration-500 group-focus-within:bg-[#89AACC]/10 group-focus-within:shadow-[0_0_24px_-4px_rgba(137,170,204,0.55)]">
+              <Mail className="w-6 h-6 text-text-primary/70 transition-colors duration-500 group-focus-within:text-[#89AACC]" />
             </div>
             <h2 className="text-4xl md:text-5xl font-display italic text-text-primary mb-4">{resumeData.formHeading}</h2>
             <p className="text-muted">{resumeData.formSubtext}</p>
           </div>
 
           {/* Status Messages */}
+          <div className="relative z-10" style={{ transform: 'translateZ(40px)' }}>
           <AnimatePresence mode="wait">
             {formStatus === 'success' && (
               <motion.div
@@ -353,84 +470,94 @@ export default function Resume() {
               </motion.div>
             )}
           </AnimatePresence>
-          
-          <form className="space-y-6" onSubmit={handleFormSubmit}>
+          </div>
+
+          <form
+            className="relative z-10 space-y-6"
+            style={{ transformStyle: 'preserve-3d' }}
+            onSubmit={handleFormSubmit}
+            onFocus={handleFieldFocus}
+            onBlur={handleFieldBlur}
+          >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs text-muted uppercase tracking-widest ml-4">Full Name *</label>
-                <input 
-                  type="text" 
+              <div className="space-y-2 group/field" style={{ transform: 'translateZ(40px)' }}>
+                <label className="text-xs text-muted uppercase tracking-widest ml-4 transition-colors duration-300 group-focus-within/field:text-[#89AACC]">Full Name *</label>
+                <input
+                  type="text"
                   name="name"
+                  autoComplete="name"
                   value={formData.name}
                   onChange={setField('name')}
-                  placeholder="John Doe" 
+                  placeholder="John Doe"
                   required
-                  className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary focus:border-white transition-colors outline-none" 
+                  className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary outline-none shadow-[0_10px_30px_-12px_rgba(0,0,0,0.7)] transition-all duration-300 focus:border-[#89AACC] focus:shadow-[0_0_0_3px_rgba(137,170,204,0.15)]"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs text-muted uppercase tracking-widest ml-4">Email Address *</label>
-                <input 
-                  type="email" 
+              <div className="space-y-2 group/field" style={{ transform: 'translateZ(40px)' }}>
+                <label className="text-xs text-muted uppercase tracking-widest ml-4 transition-colors duration-300 group-focus-within/field:text-[#89AACC]">Email Address *</label>
+                <input
+                  type="email"
                   name="email"
+                  autoComplete="email"
                   value={formData.email}
                   onChange={setField('email')}
-                  placeholder="john@example.com" 
+                  placeholder="john@example.com"
                   required
-                  className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary focus:border-white transition-colors outline-none" 
+                  className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary outline-none shadow-[0_10px_30px_-12px_rgba(0,0,0,0.7)] transition-all duration-300 focus:border-[#89AACC] focus:shadow-[0_0_0_3px_rgba(137,170,204,0.15)]"
                 />
               </div>
             </div>
-            <div className="space-y-2">
-               <label className="text-xs text-muted uppercase tracking-widest ml-4">Subject</label>
-                <input 
-                  type="text" 
+            <div className="space-y-2 group/field" style={{ transform: 'translateZ(40px)' }}>
+               <label className="text-xs text-muted uppercase tracking-widest ml-4 transition-colors duration-300 group-focus-within/field:text-[#89AACC]">Subject</label>
+                <input
+                  type="text"
                   name="subject"
                   value={formData.subject}
                   onChange={setField('subject')}
-                  placeholder="How can I help?" 
-                  className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary focus:border-white transition-colors outline-none" 
+                  placeholder="How can I help?"
+                  className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary outline-none shadow-[0_10px_30px_-12px_rgba(0,0,0,0.7)] transition-all duration-300 focus:border-[#89AACC] focus:shadow-[0_0_0_3px_rgba(137,170,204,0.15)]"
                 />
             </div>
-            <div className="space-y-2">
-              <label className="text-xs text-muted uppercase tracking-widest ml-4">Message *</label>
-              <textarea 
+            <div className="space-y-2 group/field" style={{ transform: 'translateZ(40px)' }}>
+              <label className="text-xs text-muted uppercase tracking-widest ml-4 transition-colors duration-300 group-focus-within/field:text-[#89AACC]">Message *</label>
+              <textarea
                 rows={5}
                 name="message"
                 value={formData.message}
                 onChange={setField('message')}
-                placeholder="Tell me about your project..." 
+                placeholder="Tell me about your project..."
                 required
-                className="w-full bg-bg border border-stroke rounded-[2rem] px-6 py-6 text-text-primary focus:border-white transition-colors outline-none resize-none" 
+                className="w-full bg-bg border border-stroke rounded-[2rem] px-6 py-6 text-text-primary outline-none resize-none shadow-[0_10px_30px_-12px_rgba(0,0,0,0.7)] transition-all duration-300 focus:border-[#89AACC] focus:shadow-[0_0_0_3px_rgba(137,170,204,0.15)]"
               />
             </div>
-            
-            <button 
+
+            <HoverButton
               type="submit"
               disabled={formStatus === 'sending'}
-              className="w-full group relative rounded-full text-lg hover:scale-[1.02] transition-all duration-300 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{ transform: 'translateZ(55px)' }}
+              className="w-full py-5 rounded-full text-lg text-text-primary shadow-[0_14px_40px_-12px_rgba(0,0,0,0.8)] transition-transform duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
             >
-               <span className="absolute inset-0 accent-gradient opacity-0 group-hover:opacity-100 transition-opacity" />
-               <div className="relative w-full h-full bg-text-primary hover:bg-transparent text-bg hover:text-text-primary py-5 rounded-full flex items-center justify-center gap-3 transition-all z-10 transition-colors duration-300">
-                 {formStatus === 'sending' ? (
-                   <>
-                     <div className="w-4 h-4 border-2 border-bg border-t-transparent rounded-full animate-spin" />
-                     Sending...
-                   </>
-                 ) : formStatus === 'success' ? (
-                   <>
-                     <CheckCircle2 className="w-4 h-4" />
-                     Sent!
-                   </>
-                 ) : (
-                   <>
-                     Send Message <Send className="w-4 h-4" />
-                   </>
-                 )}
-               </div>
-            </button>
+              <span className="relative z-10 flex items-center justify-center gap-3">
+                {formStatus === 'sending' ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-text-primary border-t-transparent rounded-full animate-spin" />
+                    Sending...
+                  </>
+                ) : formStatus === 'success' ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    Sent!
+                  </>
+                ) : (
+                  <>
+                    Send Message <Send className="w-4 h-4" />
+                  </>
+                )}
+              </span>
+            </HoverButton>
           </form>
-        </section>
+        </motion.section>
+        </div>
 
       </div>
     </div>
