@@ -5,7 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Link } from 'react-router-dom';
 import { Award, BookOpen, ChevronRight, Download, Mail, Send, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react';
 import TextType from '../components/TextType';
-import Noise from '../components/Noise';
+import { BeamsBackground } from '../components/ui/beams-background';
 import { usePortfolioData } from '../contexts/PortfolioDataContext';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -121,13 +121,7 @@ export default function Resume() {
 
   return (
     <div className="bg-bg min-h-screen pt-32 pb-20 relative">
-      <Noise
-        patternSize={250}
-        patternScaleX={1}
-        patternScaleY={1}
-        patternRefreshInterval={2}
-        patternAlpha={15}
-      />
+      <BeamsBackground intensity="strong" />
       {/* About Me Section */}
       <section className="max-w-[1200px] mx-auto px-6 md:px-12 mb-32 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
@@ -217,7 +211,7 @@ export default function Resume() {
       <div className="max-w-[1200px] mx-auto px-6 md:px-12">
         
         {/* Education Section */}
-        <section className="resume-reveal mb-32">
+        <section className="resume-reveal mb-32 relative z-10">
           <div className="flex items-center gap-3 mb-12">
             <BookOpen className="w-5 h-5 text-muted" />
             <h2 className="text-xs text-muted uppercase tracking-[0.3em]">Academic Journey</h2>
@@ -250,9 +244,9 @@ export default function Resume() {
           </div>
         </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-24 mb-32">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-24 mb-32 relative z-10">
           {/* Certifications */}
-          <section className="resume-reveal md:col-span-12 lg:col-span-4">
+          <section className="resume-reveal md:col-span-12 lg:col-span-4 relative z-10">
             <div className="flex items-center gap-3 mb-10">
               <Award className="w-4 h-4 text-muted" />
               <h2 className="text-xs text-muted uppercase tracking-[0.3em]">Certifications</h2>
@@ -283,7 +277,7 @@ export default function Resume() {
           </section>
 
           {/* Competencies */}
-          <section className="resume-reveal md:col-span-12 lg:col-span-8">
+          <section className="resume-reveal md:col-span-12 lg:col-span-8 relative z-10">
             <div className="flex items-center gap-3 mb-10">
               <h2 className="text-xs text-muted uppercase tracking-[0.3em]">Specialized Skills</h2>
               <div className="flex-1 h-px bg-stroke" />
@@ -325,7 +319,7 @@ export default function Resume() {
         </div>
 
         {/* Contact Form */}
-        <section className="resume-reveal max-w-4xl mx-auto bg-surface border border-stroke rounded-[3rem] p-8 md:p-16">
+        <section className="resume-reveal max-w-4xl mx-auto bg-surface border border-stroke rounded-[3rem] p-8 md:p-16 relative z-10">
           <div className="text-center mb-12">
             <div className="inline-flex p-3 rounded-full bg-stroke/30 mb-6">
               <Mail className="w-6 h-6 text-text-primary/70" />

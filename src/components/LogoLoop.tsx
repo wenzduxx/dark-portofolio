@@ -155,7 +155,15 @@ const useAnimationLoop = (
       };
     }
 
+    // Gate the loop on viewport intersection + tab visibility. LogoLoop is
+    // mounted in Contact (footer of every page) so without this it would
+    // animate 60 FPS even while the user is at the top of the page.
+    let inView = false;
+    let tabVisible = !document.hidden;
+    let running = false;
+
     const animate = (timestamp: number) => {
+      if (!running) return;
       if (lastTimestampRef.current === null) {
         lastTimestampRef.current = timestamp;
       }
@@ -182,14 +190,45 @@ const useAnimationLoop = (
       rafRef.current = requestAnimationFrame(animate);
     };
 
-    rafRef.current = requestAnimationFrame(animate);
-
-    return () => {
+    const start = () => {
+      if (running) return;
+      if (!inView || !tabVisible) return;
+      running = true;
+      // Reset timestamp so the first frame after pause doesn't apply a huge
+      // delta and snap the marquee forward.
+      lastTimestampRef.current = null;
+      rafRef.current = requestAnimationFrame(animate);
+    };
+    const stop = () => {
+      running = false;
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       }
       lastTimestampRef.current = null;
+    };
+
+    const io = new IntersectionObserver(
+      entries => {
+        inView = entries[0]?.isIntersecting ?? false;
+        if (inView) start();
+        else stop();
+      },
+      { threshold: 0 }
+    );
+    io.observe(track);
+
+    const handleVisibility = () => {
+      tabVisible = !document.hidden;
+      if (tabVisible) start();
+      else stop();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      stop();
+      io.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [targetVelocity, seqWidth, seqHeight, isHovered, hoverSpeed, isVertical]);
 };
