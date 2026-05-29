@@ -6,7 +6,6 @@
  * Falls back to empty arrays (components handle empty gracefully).
  */
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
 import type { ProjectCaseStudy } from '../data/projects';
 import type { JournalEntry } from '../data/journal';
 import type { ExperienceEntry } from '../data/experience';
@@ -319,6 +318,10 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
   const fetchAll = useCallback(async () => {
     setCtx(prev => ({ ...prev, loading: true }));
     try {
+      // Dynamic import — the Supabase SDK (~50-70 KB gzipped) sits in its own
+      // chunk via manualChunks. Importing here means it's fetched + evaluated
+      // AFTER first paint, not as part of the critical render path.
+      const { supabase } = await import('../lib/supabase');
       const [
         { data: siteSettings },
         { data: heroSettings },
@@ -723,16 +726,26 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
       }, 250);
     };
 
-    const channels = WATCHED_TABLES.map(table =>
-      supabase
-        .channel(`realtime_${table}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table }, scheduleFetch)
-        .subscribe()
-    );
+    let cancelled = false;
+    let cleanupChannels: (() => void) | undefined;
+
+    // Lazy import so the Supabase realtime SDK isn't on the critical path.
+    (async () => {
+      const { supabase } = await import('../lib/supabase');
+      if (cancelled) return;
+      const channels = WATCHED_TABLES.map(table =>
+        supabase
+          .channel(`realtime_${table}`)
+          .on('postgres_changes', { event: '*', schema: 'public', table }, scheduleFetch)
+          .subscribe()
+      );
+      cleanupChannels = () => channels.forEach(ch => supabase.removeChannel(ch));
+    })();
 
     return () => {
+      cancelled = true;
       if (debounceId !== null) clearTimeout(debounceId);
-      channels.forEach(ch => supabase.removeChannel(ch));
+      cleanupChannels?.();
     };
   }, [fetchAll]);
 

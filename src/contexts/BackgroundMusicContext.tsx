@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 
 type MusicSlot = 'home' | 'work' | 'resume';
 
@@ -113,29 +112,37 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
     };
   }, []);
 
-  // Fetch initial URLs and subscribe to realtime updates of site_settings
+  // Fetch initial URLs and subscribe to realtime updates of site_settings.
+  // The Supabase SDK is dynamically imported so it doesn't sit on the
+  // critical render path for the first paint of Home.
   useEffect(() => {
     let mounted = true;
-    const fetchSettings = async () => {
-      const { data } = await supabase
-        .from('site_settings')
-        .select('home_music_url, work_music_url, resume_music_url')
-        .single();
-      if (!mounted || !data) return;
-      setUrls({
-        home: data.home_music_url || null,
-        work: data.work_music_url || null,
-        resume: data.resume_music_url || null,
-      });
-    };
-    fetchSettings();
-    const channel = supabase
-      .channel('bg-music-settings')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, fetchSettings)
-      .subscribe();
+    let cleanup: (() => void) | undefined;
+    (async () => {
+      const { supabase } = await import('../lib/supabase');
+      if (!mounted) return;
+      const fetchSettings = async () => {
+        const { data } = await supabase
+          .from('site_settings')
+          .select('home_music_url, work_music_url, resume_music_url')
+          .single();
+        if (!mounted || !data) return;
+        setUrls({
+          home: data.home_music_url || null,
+          work: data.work_music_url || null,
+          resume: data.resume_music_url || null,
+        });
+      };
+      fetchSettings();
+      const channel = supabase
+        .channel('bg-music-settings')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, fetchSettings)
+        .subscribe();
+      cleanup = () => supabase.removeChannel(channel);
+    })();
     return () => {
       mounted = false;
-      supabase.removeChannel(channel);
+      cleanup?.();
     };
   }, []);
 

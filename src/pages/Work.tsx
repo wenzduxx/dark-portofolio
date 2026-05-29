@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Minus, ArrowRight } from 'lucide-react';
-import Noise from '../components/Noise';
+import { BeamsBackground } from '../components/ui/beams-background';
 import { usePortfolioData } from '../contexts/PortfolioDataContext';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -55,13 +55,7 @@ export default function Work() {
 
   return (
     <div ref={pageRef} className="pt-32 pb-20 px-6 md:px-12 relative">
-      <Noise
-        patternSize={250}
-        patternScaleX={1}
-        patternScaleY={1}
-        patternRefreshInterval={2}
-        patternAlpha={15}
-      />
+      <BeamsBackground intensity="strong" />
       {/* Hero */}
       <section className="max-w-[1200px] mx-auto mb-24 md:mb-32 relative z-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-12">
@@ -91,7 +85,7 @@ export default function Work() {
       </section>
 
       {/* Experience Section */}
-      <section className="max-w-[1200px] mx-auto mb-32">
+      <section className="max-w-[1200px] mx-auto mb-32 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
           <div className="md:col-span-4">
             <h2 className="text-xs text-muted uppercase tracking-[0.3em] sticky top-40">Experience</h2>
@@ -129,7 +123,7 @@ export default function Work() {
       </section>
 
       {/* Horizontal Blog Section */}
-      <div ref={containerRef} className="bg-surface overflow-hidden mb-32 h-screen flex flex-col justify-center w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+      <div ref={containerRef} className="bg-surface overflow-hidden mb-32 h-screen flex flex-col justify-center w-screen relative z-10 left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
         <div className="max-w-[1200px] mx-auto w-full px-6 md:px-12 mb-12 shrink-0">
           <h2 className="text-xs text-muted uppercase tracking-[0.3em]">Activities & Insights</h2>
         </div>
@@ -168,7 +162,7 @@ export default function Work() {
       </div>
 
       {/* Full Project Archive */}
-      <section className="max-w-[1200px] mx-auto mb-32">
+      <section className="max-w-[1200px] mx-auto mb-32 relative z-10">
         <div className="flex items-center gap-3 mb-12">
            <h2 className="text-xs text-muted uppercase tracking-[0.3em]">Full Portfolio</h2>
            <div className="flex-1 h-px bg-stroke" />
@@ -228,7 +222,7 @@ export default function Work() {
       </section>
 
       {/* Principles Section */}
-      <section className="max-w-[1200px] mx-auto mb-32">
+      <section className="max-w-[1200px] mx-auto mb-32 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 items-center">
           <div>
             <h2 className="text-4xl md:text-5xl font-display italic text-text-primary mb-8 tracking-tight">
@@ -269,7 +263,7 @@ export default function Work() {
 
       {/* Clients Section */}
       {CLIENTS.length > 0 && (
-      <section className="max-w-[1200px] mx-auto pt-20 border-t border-stroke">
+      <section className="max-w-[1200px] mx-auto pt-20 border-t border-stroke relative z-10">
         <h2 className="text-xs text-muted uppercase tracking-[0.3em] mb-12 text-center">Trusted By</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16">
           {CLIENTS.map((client, i) => (
