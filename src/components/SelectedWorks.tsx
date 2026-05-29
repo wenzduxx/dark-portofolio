@@ -49,9 +49,11 @@ export function SelectedWorks() {
               className={`${project.col} group relative block aspect-[4/3] md:aspect-auto md:min-h-[400px] overflow-hidden rounded-3xl bg-surface border border-stroke`}
             >
               {/* Background Image */}
-              <img 
-                src={project.image} 
+              <img
+                src={project.image}
                 alt={project.title}
+                loading="lazy"
+                decoding="async"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
               

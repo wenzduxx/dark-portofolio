@@ -71,9 +71,11 @@ export default function JournalDetail() {
           transition={{ duration: 1.2, delay: 0.2 }}
           className="aspect-video rounded-[3rem] overflow-hidden mb-16 border border-stroke shadow-2xl"
         >
-          <img 
-            src={entry.heroImage} 
-            alt={entry.title} 
+          <img
+            src={entry.heroImage}
+            alt={entry.title}
+            decoding="async"
+            fetchPriority="high"
             className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
           />
         </motion.div>

@@ -92,7 +92,7 @@ export const DETAILED_PROJECTS: Record<string, ProjectCaseStudy> = {
     year: '2024',
     client: 'Metropolis Lab',
     role: 'Visual Architect',
-    heroImage: '/src/assets/images/regenerated_image_1778765464383.png',
+    heroImage: '/src/assets/images/regenerated_image_1778765464383.webp',
     description: 'A visionary exploration of vertical living spaces, combining brutalist aesthetics with sustainable green architecture.',
     background: {
       title: 'Housing Density',

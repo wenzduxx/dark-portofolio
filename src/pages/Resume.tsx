@@ -160,9 +160,11 @@ export default function Resume() {
               <div className="absolute inset-[-8px] rounded-full border border-white/5 bg-white/[0.02] backdrop-blur-sm -z-10 animate-[pulse_8s_linear_infinite]" />
               
               <div className="w-full h-full rounded-full overflow-hidden border border-stroke bg-surface relative grayscale hover:grayscale-0 transition-all duration-1000">
-                 <img 
+                 <img
                    src={resumeData.profileImage}
-                   alt="Profile" 
+                   alt="Profile"
+                   decoding="async"
+                   fetchPriority="high"
                    className="w-full h-full object-cover"
                  />
                  {/* Glass overlay */}

@@ -117,7 +117,7 @@ export function Explorations() {
                 className="group relative w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80 rounded-3xl overflow-hidden cursor-crosshair"
                 style={{ transform: `rotate(${i % 2 === 0 ? '-3deg' : '2deg'})` }}
               >
-                <img src={item.image} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <img src={item.image} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-bg/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
             ))}
@@ -131,7 +131,7 @@ export function Explorations() {
                 className="group relative w-40 h-40 md:w-56 md:h-56 lg:w-72 lg:h-72 rounded-3xl overflow-hidden cursor-crosshair"
                 style={{ transform: `rotate(${i % 2 === 0 ? '4deg' : '-2deg'})` }}
               >
-                <img src={item.image} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <img src={item.image} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-bg/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
             ))}
