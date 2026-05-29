@@ -24,13 +24,13 @@ interface Beam {
 // per-frame draw cost.
 const BEAM_COUNT = 14;
 
-// Softer overall vs the original spec (which was 0.7 / 0.85 / 1.0). The
-// previous version was too bright because it now sits on bg-bg directly
-// (no bg-neutral-950 darkening layer) and no backdrop-filter overlay.
+// Slightly softer than the original spec (0.7 / 0.85 / 1.0). True HSL
+// gradients (vs the earlier source-atop tint) read brighter per opacity
+// unit, so we don't need to push all the way to 1.0 to feel "strong".
 const OPACITY_MAP = {
-  subtle: 0.45,
-  medium: 0.6,
-  strong: 0.75,
+  subtle: 0.6,
+  medium: 0.8,
+  strong: 0.95,
 } as const;
 
 function createBeam(width: number, height: number): Beam {
@@ -42,8 +42,9 @@ function createBeam(width: number, height: number): Beam {
     length: height * 2.5,
     angle,
     speed: 0.6 + Math.random() * 1.2,
-    // Halved vs the spec (was 0.12 + r*0.16) — softer baseline.
-    opacity: 0.07 + Math.random() * 0.1,
+    // Slightly under spec (was 0.12 + r*0.16) — keeps individual beams from
+    // dominating while still reading as vivid color.
+    opacity: 0.1 + Math.random() * 0.14,
     hue: 190 + Math.random() * 70,
     pulse: Math.random() * Math.PI * 2,
     pulseSpeed: 0.02 + Math.random() * 0.03,
@@ -84,8 +85,8 @@ function BeamsBackgroundImpl({ className, intensity = 'strong' }: BeamsBackgroun
       beam.width = 100 + Math.random() * 100;
       beam.speed = 0.5 + Math.random() * 0.4;
       beam.hue = 190 + (index * 70) / totalBeams;
-      // Halved vs the spec for the same softness reason.
-      beam.opacity = 0.1 + Math.random() * 0.06;
+      // Slightly under spec (was 0.2 + r*0.1) for the same reason.
+      beam.opacity = 0.16 + Math.random() * 0.08;
     };
 
     const updateCanvasSize = () => {
