@@ -1,12 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+import React, { memo, useEffect, useRef } from 'react';
 import { useBackgroundMusic } from '../contexts/BackgroundMusicContext';
 
 const BAR_COUNT = 4;
 const IDLE_HEIGHTS = [3, 5, 4, 6];
 const MAX_HEIGHT = 14;
 const SMOOTH_FACTOR = 0.35;
+// Threshold below which we skip the style.height write — visually
+// imperceptible (< 0.1px) but avoids forcing a layout recalc every frame.
+const WRITE_THRESHOLD = 0.1;
 
-export function MusicVisualizer() {
+function MusicVisualizerImpl() {
   const { isMuted, hasAudioAvailable, getAnalyserData } = useBackgroundMusic();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -17,7 +20,9 @@ export function MusicVisualizer() {
     if (bars.length !== BAR_COUNT) return;
 
     const smoothed = new Array(BAR_COUNT).fill(0);
+    const lastWritten = new Array(BAR_COUNT).fill(-1);
     let raf = 0;
+    let stopped = false;
 
     const tick = () => {
       const isAudible = !isMuted;
@@ -41,12 +46,39 @@ export function MusicVisualizer() {
           targetPx = IDLE_HEIGHTS[i] + Math.sin(phase) * 0.9;
         }
         smoothed[i] = smoothed[i] + (targetPx - smoothed[i]) * SMOOTH_FACTOR;
-        bars[i].style.height = `${smoothed[i].toFixed(2)}px`;
+        if (Math.abs(smoothed[i] - lastWritten[i]) >= WRITE_THRESHOLD) {
+          bars[i].style.height = `${smoothed[i].toFixed(2)}px`;
+          lastWritten[i] = smoothed[i];
+        }
       }
+      if (!stopped) raf = requestAnimationFrame(tick);
+    };
+
+    const start = () => {
+      if (!stopped) return;
+      stopped = false;
       raf = requestAnimationFrame(tick);
     };
+    const stop = () => {
+      stopped = true;
+      cancelAnimationFrame(raf);
+    };
+
+    // rAF is already throttled by the browser when the tab is hidden, but
+    // wiring visibilitychange lets us also fully release the loop instead
+    // of letting it tick at 1 Hz.
+    const handleVisibility = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(raf);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [isMuted, getAnalyserData]);
 
   if (!hasAudioAvailable) return null;
@@ -70,3 +102,5 @@ export function MusicVisualizer() {
     </div>
   );
 }
+
+export const MusicVisualizer = memo(MusicVisualizerImpl);

@@ -208,7 +208,7 @@ const DEFAULT_CONTEXT: PortfolioContextType = {
   ],
   homeProjects: [
     { id: 'automotive-motion', title: 'Automotive Motion', col: 'md:col-span-7', image: 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&q=80&w=1200' },
-    { id: 'urban-architecture', title: 'Urban Architecture', col: 'md:col-span-5', image: '/src/assets/images/regenerated_image_1778905589186.jpg' },
+    { id: 'urban-architecture', title: 'Urban Architecture', col: 'md:col-span-5', image: '/src/assets/images/regenerated_image_1778905589186.webp' },
     { id: 'human-perspective', title: 'Human Perspective', col: 'md:col-span-5', image: 'https://images.unsplash.com/photo-1517404215738-15263e9f9178?auto=format&fit=crop&q=80&w=1200' },
     { id: 'brand-identity', title: 'Brand Identity', col: 'md:col-span-7', image: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=1200' },
   ],
@@ -710,16 +710,28 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
       'clients', 'explorations_gallery'
     ];
 
+    // Debounce: a single Back Office save typically touches several related
+    // tables (e.g. project + project_tech_stack + project_visuals). Without
+    // this we'd kick off N concurrent fetchAll() runs — each one 29 parallel
+    // queries — and re-render the portfolio tree N times.
+    let debounceId: ReturnType<typeof setTimeout> | null = null;
+    const scheduleFetch = () => {
+      if (debounceId !== null) clearTimeout(debounceId);
+      debounceId = setTimeout(() => {
+        debounceId = null;
+        fetchAll();
+      }, 250);
+    };
+
     const channels = WATCHED_TABLES.map(table =>
       supabase
         .channel(`realtime_${table}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table }, () => {
-          fetchAll();
-        })
+        .on('postgres_changes', { event: '*', schema: 'public', table }, scheduleFetch)
         .subscribe()
     );
 
     return () => {
+      if (debounceId !== null) clearTimeout(debounceId);
       channels.forEach(ch => supabase.removeChannel(ch));
     };
   }, [fetchAll]);

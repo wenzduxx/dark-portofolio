@@ -12,10 +12,19 @@ export function Navbar() {
   const { navLinks: NAV_LINKS, siteData } = usePortfolioData();
 
   useEffect(() => {
+    // Only flip state when crossing the 50-px boundary — avoids invoking the
+    // setter on every scroll event and lets the listener stay passive so the
+    // browser never blocks the scroll thread.
+    let current = window.scrollY > 50;
+    setScrolled(current);
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+      const next = window.scrollY > 50;
+      if (next !== current) {
+        current = next;
+        setScrolled(next);
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 

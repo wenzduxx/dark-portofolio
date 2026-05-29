@@ -107,9 +107,11 @@ export default function ProjectDetail() {
           style={{ scale: heroScale, opacity: heroOpacity }}
           className="absolute inset-0 z-0"
         >
-          <img 
-            src={project.heroImage} 
+          <img
+            src={project.heroImage}
             alt={project.title}
+            decoding="async"
+            fetchPriority="high"
             className="w-full h-full object-cover grayscale brightness-50"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/40 to-transparent" />
@@ -203,9 +205,11 @@ export default function ProjectDetail() {
         {project.visuals[0] && (
           <section className="pb-32 fade-up-section">
              <div className="aspect-video w-full rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-surface relative" style={{ clipPath: 'inset(0)' }}>
-                <img 
-                  src={project.visuals[0].url} 
+                <img
+                  src={project.visuals[0].url}
                   alt={project.visuals[0].caption}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-[140%] absolute left-0 top-[-20%] object-cover parallax-img"
                 />
                 <div className="absolute bottom-6 md:bottom-10 left-6 md:left-10 bg-bg/50 backdrop-blur-md px-4 py-2 rounded-full text-xs text-white/70 font-mono flex items-center gap-3">
@@ -304,9 +308,11 @@ export default function ProjectDetail() {
                 {project.visuals.slice(1, 3).map((visual, idx) => (
                    <div key={idx} className="w-full">
                      <div className="aspect-[4/5] lg:aspect-[3/4] w-full rounded-[2rem] overflow-hidden bg-surface border border-stroke relative" style={{ clipPath: 'inset(0)' }}>
-                        <img 
-                          src={visual.url} 
+                        <img
+                          src={visual.url}
                           alt={visual.caption}
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-[140%] absolute left-0 top-[-20%] object-cover parallax-img"
                         />
                      </div>

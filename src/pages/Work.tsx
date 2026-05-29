@@ -141,10 +141,12 @@ export default function Work() {
               className="w-[350px] md:w-[450px] group flex flex-col shrink-0"
             >
               <div className="aspect-[16/10] overflow-hidden rounded-3xl bg-stroke mb-8">
-                <img 
-                  src={post.image} 
-                  alt={post.title} 
-                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105" 
+                <img
+                  src={post.image}
+                  alt={post.title}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
                 />
               </div>
               <div className="px-2">
@@ -197,9 +199,11 @@ export default function Work() {
                 className="group flex flex-col"
               >
                 <div className={`w-full overflow-hidden rounded-2xl bg-surface mb-6 relative ${pattern.aspect}`}>
-                  <img 
-                    src={project.image} 
-                    alt={project.title} 
+                  <img
+                    src={project.image}
+                    alt={project.title}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-bg/20 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -247,9 +251,11 @@ export default function Work() {
             </div>
           </div>
           <div className="aspect-square bg-surface border border-stroke rounded-[3rem] overflow-hidden relative">
-             <img 
-               src="https://images.unsplash.com/photo-1558655146-23b01c7bc161?auto=format&fit=crop&q=80&w=1000" 
-               alt="" 
+             <img
+               src="https://images.unsplash.com/photo-1558655146-23b01c7bc161?auto=format&fit=crop&q=80&w=1000"
+               alt=""
+               loading="lazy"
+               decoding="async"
                className="w-full h-full object-cover mix-blend-luminosity opacity-40"
              />
              <div className="absolute inset-0 flex items-center justify-center p-12">

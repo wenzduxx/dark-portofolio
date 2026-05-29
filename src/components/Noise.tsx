@@ -25,31 +25,35 @@ const Noise: React.FC<NoiseProps> = ({
     if (!ctx) return;
 
     let frame = 0;
-    let animationId: number;
+    let animationId = 0;
+    let stopped = false;
+    let resizePending = false;
 
-    const canvasSize = 1024;
+    // 320x320 upscaled via CSS to 100vw/100vh with image-rendering:pixelated.
+    // Grain noise has no structure — the eye can't distinguish 1024² from
+    // 320² after upscale, but per-frame ImageData allocation drops ~10×
+    // (≈4 MB/tick → ≈400 KB/tick).
+    const canvasSize = 320;
+    const imageData = ctx.createImageData(canvasSize, canvasSize);
+    const data = imageData.data;
+    // Pre-fill the alpha channel once; only RGB values change per frame.
+    for (let i = 3; i < data.length; i += 4) data[i] = patternAlpha;
 
     const resize = () => {
       if (!canvas) return;
       canvas.width = canvasSize;
       canvas.height = canvasSize;
-
       canvas.style.width = '100vw';
       canvas.style.height = '100vh';
     };
 
     const drawGrain = () => {
-      const imageData = ctx.createImageData(canvasSize, canvasSize);
-      const data = imageData.data;
-
       for (let i = 0; i < data.length; i += 4) {
-        const value = Math.random() * 255;
+        const value = (Math.random() * 255) | 0;
         data[i] = value;
         data[i + 1] = value;
         data[i + 2] = value;
-        data[i + 3] = patternAlpha;
       }
-
       ctx.putImageData(imageData, 0, 0);
     };
 
@@ -58,15 +62,44 @@ const Noise: React.FC<NoiseProps> = ({
         drawGrain();
       }
       frame++;
-      animationId = window.requestAnimationFrame(loop);
+      if (!stopped) animationId = window.requestAnimationFrame(loop);
     };
 
-    window.addEventListener('resize', resize);
+    const start = () => {
+      if (!stopped) return;
+      stopped = false;
+      animationId = window.requestAnimationFrame(loop);
+    };
+    const stop = () => {
+      stopped = true;
+      window.cancelAnimationFrame(animationId);
+    };
+
+    // rAF-coalesce the resize handler so a single resize-drag doesn't fire
+    // dozens of layout writes.
+    const onResize = () => {
+      if (resizePending) return;
+      resizePending = true;
+      window.requestAnimationFrame(() => {
+        resizePending = false;
+        resize();
+      });
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+
+    window.addEventListener('resize', onResize, { passive: true });
+    document.addEventListener('visibilitychange', handleVisibility);
     resize();
     loop();
 
     return () => {
-      window.removeEventListener('resize', resize);
+      stopped = true;
+      window.removeEventListener('resize', onResize);
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.cancelAnimationFrame(animationId);
     };
   }, [patternSize, patternScaleX, patternScaleY, patternRefreshInterval, patternAlpha]);

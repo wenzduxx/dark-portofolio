@@ -174,14 +174,30 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
 
   // First-interaction handler: flips audio.muted=false so the user can finally
   // hear the music that has been playing silently since page load. Also
-  // initializes the Web Audio graph for the visualizer.
+  // initializes the Web Audio graph for the visualizer. Self-cleans the
+  // listeners on first successful unmute — otherwise scroll/mousemove keep
+  // firing this handler for the lifetime of the page.
   useEffect(() => {
     let attemptInProgress = false;
+    let cleaned = false;
 
-    const tryUnmute = () => {
+    // Events split by type: gesture events benefit from capture-phase to
+    // catch them as early as possible; passive movement/scroll events should
+    // signal the browser they won't preventDefault.
+    const gestureEvents = ['click', 'keydown', 'touchstart', 'pointerdown'] as const;
+    const passiveEvents = ['scroll', 'wheel', 'mousemove'] as const;
+
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      gestureEvents.forEach(e => document.removeEventListener(e, tryUnmute, true));
+      passiveEvents.forEach(e => document.removeEventListener(e, tryUnmute, true));
+    };
+
+    function tryUnmute() {
       const audio = audioRef.current;
       if (!audio) return;
-      if (!audio.muted) return;
+      if (!audio.muted) { cleanup(); return; }
       if (isMutedRef.current) return;
       if (attemptInProgress) return;
 
@@ -192,6 +208,7 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
           ensureAnalyser();
           audioContextRef.current?.resume().catch(() => {});
           attemptInProgress = false;
+          cleanup();
         })
         .catch(() => {
           // Browser rejected unmute (no user activation). Revert and wait.
@@ -199,18 +216,16 @@ export function BackgroundMusicProvider({ children }: { children: React.ReactNod
           audio.play().catch(() => {});
           attemptInProgress = false;
         });
-    };
+    }
 
-    const events = ['click', 'keydown', 'touchstart', 'pointerdown', 'scroll', 'wheel', 'mousemove'] as const;
-    events.forEach(e => {
+    gestureEvents.forEach(e => {
+      document.addEventListener(e, tryUnmute, { capture: true });
+    });
+    passiveEvents.forEach(e => {
       document.addEventListener(e, tryUnmute, { capture: true, passive: true });
     });
 
-    return () => {
-      events.forEach(e => {
-        document.removeEventListener(e, tryUnmute, true);
-      });
-    };
+    return cleanup;
   }, [ensureAnalyser]);
 
   const toggleMute = useCallback(() => {

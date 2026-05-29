@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, forwardRef, useImperativeHandle, useEffect, useRef, useMemo, FC, ReactNode } from 'react';
+import React, { Component, ErrorInfo, forwardRef, useImperativeHandle, useEffect, useRef, useState, useMemo, FC, ReactNode } from 'react';
 
 import * as THREE from 'three';
 
@@ -94,9 +94,9 @@ class CanvasErrorBoundary extends Component<{children: ReactNode}, {hasError: bo
   }
 }
 
-const CanvasWrapper: FC<{ children: ReactNode }> = ({ children }) => (
+const CanvasWrapper: FC<{ children: ReactNode; frameloop: 'always' | 'never' }> = ({ children, frameloop }) => (
   <CanvasErrorBoundary>
-    <Canvas dpr={[1, 2]} frameloop="always" className="w-full h-full relative" gl={{ preserveDrawingBuffer: false, powerPreference: "default", antialias: false }}>
+    <Canvas dpr={[1, 2]} frameloop={frameloop} className="w-full h-full relative" gl={{ preserveDrawingBuffer: false, powerPreference: "default", antialias: false }}>
       {children}
     </Canvas>
   </CanvasErrorBoundary>
@@ -209,6 +209,36 @@ const Beams: FC<BeamsProps> = ({
   rotation = 0
 }) => {
   const meshRef = useRef<THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>>(null!);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const [isActive, setIsActive] = useState(false);
+
+  // Only run the Three.js render loop when the component is on-screen AND
+  // the tab is visible. Contact is the last section of the page — most of
+  // a session it's far below the fold, so this avoids constant GPU work.
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    let isVisible = false;
+    let isTabVisible = !document.hidden;
+    const apply = () => setIsActive(isVisible && isTabVisible);
+    const io = new IntersectionObserver(
+      entries => {
+        isVisible = entries[0]?.isIntersecting ?? false;
+        apply();
+      },
+      { threshold: 0 }
+    );
+    io.observe(el);
+    const handleVisibility = () => {
+      isTabVisible = !document.hidden;
+      apply();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      io.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
 
   const beamMaterial = useMemo(
     () =>
@@ -268,15 +298,17 @@ const Beams: FC<BeamsProps> = ({
   );
 
   return (
-    <CanvasWrapper>
-      <group rotation={[0, 0, degToRad(rotation)]}>
-        <PlaneNoise ref={meshRef} material={beamMaterial} count={beamNumber} width={beamWidth} height={beamHeight} />
-        <DirLight color={lightColor} position={[0, 3, 10]} />
-      </group>
-      <ambientLight intensity={1} />
-      <color attach="background" args={['#000000']} />
-      <PerspectiveCamera makeDefault position={[0, 0, 20]} fov={30} />
-    </CanvasWrapper>
+    <div ref={wrapperRef} className="w-full h-full">
+      <CanvasWrapper frameloop={isActive ? 'always' : 'never'}>
+        <group rotation={[0, 0, degToRad(rotation)]}>
+          <PlaneNoise ref={meshRef} material={beamMaterial} count={beamNumber} width={beamWidth} height={beamHeight} />
+          <DirLight color={lightColor} position={[0, 3, 10]} />
+        </group>
+        <ambientLight intensity={1} />
+        <color attach="background" args={['#000000']} />
+        <PerspectiveCamera makeDefault position={[0, 0, 20]} fov={30} />
+      </CanvasWrapper>
+    </div>
   );
 };
 

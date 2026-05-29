@@ -153,10 +153,22 @@ export default function Aurora(props: any) {
       delete geometry.attributes.uv;
     }
 
-    const colorStopsArray = colorStops.map((hex: any) => {
-      const c = new Color(hex);
-      return [c.r, c.g, c.b];
-    });
+    // Cache the converted color-stops array — `new Color(hex)` allocates a
+    // small object every call, and stops only change when the user re-themes.
+    // Without this, we instantiate 3 Color objects on every animation frame.
+    let cachedColorStopsKey = '';
+    let cachedColorStopsValue: number[][] = [];
+    const computeColorStops = (stops: any[]) => {
+      const key = stops.join('|');
+      if (key !== cachedColorStopsKey) {
+        cachedColorStopsKey = key;
+        cachedColorStopsValue = stops.map((hex: any) => {
+          const c = new Color(hex);
+          return [c.r, c.g, c.b];
+        });
+      }
+      return cachedColorStopsValue;
+    };
 
     program = new Program(gl, {
       vertex: VERT,
@@ -164,7 +176,7 @@ export default function Aurora(props: any) {
       uniforms: {
         uTime: { value: 0 },
         uAmplitude: { value: amplitude },
-        uColorStops: { value: colorStopsArray },
+        uColorStops: { value: computeColorStops(colorStops) },
         uResolution: { value: [ctn.offsetWidth, ctn.offsetHeight] },
         uBlend: { value: blend }
       }
@@ -174,25 +186,58 @@ export default function Aurora(props: any) {
     ctn.appendChild(gl.canvas);
 
     let animateId = 0;
+    let isVisible = true;
+    let isTabVisible = !document.hidden;
+    let running = false;
+
     const update = (t: any) => {
-      animateId = requestAnimationFrame(update);
       const { time = t * 0.01, speed = 1.0 } = propsRef.current;
       program.uniforms.uTime.value = time * speed * 0.1;
       program.uniforms.uAmplitude.value = propsRef.current.amplitude ?? 1.0;
       program.uniforms.uBlend.value = propsRef.current.blend ?? blend;
       const stops = propsRef.current.colorStops ?? colorStops;
-      program.uniforms.uColorStops.value = stops.map((hex: any) => {
-        const c = new Color(hex);
-        return [c.r, c.g, c.b];
-      });
+      program.uniforms.uColorStops.value = computeColorStops(stops);
       renderer.render({ scene: mesh });
+      if (running) animateId = requestAnimationFrame(update);
     };
-    animateId = requestAnimationFrame(update);
 
+    const start = () => {
+      if (running || !isVisible || !isTabVisible) return;
+      running = true;
+      animateId = requestAnimationFrame(update);
+    };
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(animateId);
+    };
+
+    // Pause the WebGL loop when the container is fully off-screen — Hero is
+    // ~100vh tall, so the user spends most of the session outside this
+    // section's viewport. No reason to keep burning GPU then.
+    const io = new IntersectionObserver(
+      entries => {
+        isVisible = entries[0]?.isIntersecting ?? true;
+        if (isVisible) start();
+        else stop();
+      },
+      { threshold: 0 }
+    );
+    io.observe(ctn);
+
+    const handleVisibility = () => {
+      isTabVisible = !document.hidden;
+      if (isTabVisible) start();
+      else stop();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    start();
     resize();
 
     return () => {
-      cancelAnimationFrame(animateId);
+      stop();
+      io.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('resize', resize);
       if (ctn && gl.canvas.parentNode === ctn) {
         ctn.removeChild(gl.canvas);

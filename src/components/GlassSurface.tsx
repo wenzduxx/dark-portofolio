@@ -168,8 +168,17 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   useEffect(() => {
     if (!containerRef.current) return;
 
+    // rAF-coalesce: a single drag-resize can fire ResizeObserver dozens of
+    // times. Without this we re-encode the SVG displacement map data-URL
+    // per pixel; with it we do at most one re-encode per frame.
+    let pending = false;
     const resizeObserver = new ResizeObserver(() => {
-      setTimeout(updateDisplacementMap, 0);
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(() => {
+        pending = false;
+        updateDisplacementMap();
+      });
     });
 
     resizeObserver.observe(containerRef.current);

@@ -101,9 +101,11 @@ export default function ExperienceDetail() {
         <div 
           className="absolute inset-0 z-0"
         >
-          <img 
-            src={exp.heroImage} 
+          <img
+            src={exp.heroImage}
             alt={exp.role}
+            decoding="async"
+            fetchPriority="high"
             className="w-full h-full object-cover grayscale brightness-50"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/60 to-transparent" />
@@ -199,9 +201,11 @@ export default function ExperienceDetail() {
                   {exp.gallery.map((img, idx) => (
                     <div key={idx}>
                        <div className="aspect-video w-full rounded-[2rem] overflow-hidden bg-surface relative filter grayscale hover:grayscale-0 transition-all duration-700" style={{ clipPath: 'inset(0)' }}>
-                          <img 
-                            src={img.url} 
+                          <img
+                            src={img.url}
                             alt={img.caption}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-[140%] absolute left-0 top-[-20%] object-cover parallax-img"
                           />
                        </div>

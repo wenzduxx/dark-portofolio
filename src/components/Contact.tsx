@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import LogoLoop from './LogoLoop';
-import Beams from './Beams';
 import GlassSurface from './GlassSurface';
 import { SiReact, SiNextdotjs, SiTypescript, SiTailwindcss, SiGithub, SiDocker, SiSupabase, SiPrisma, SiJavascript, SiFirebase, SiVercel } from 'react-icons/si';
 import { usePortfolioData } from '../contexts/PortfolioDataContext';
+
+// Beams pulls in three.js (~300 KB gzipped). It only ever renders at the
+// bottom of the page so we defer its download — falls back to a plain black
+// fill, which matches the surrounding bg-black until the chunk arrives.
+const Beams = lazy(() => import('./Beams'));
 
 export function Contact() {
   const { contact } = usePortfolioData();
@@ -27,16 +31,18 @@ export function Contact() {
       {/* Background Beams */}
       <div className="absolute inset-0 z-0 bg-black">
         <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
-          <Beams
-            beamWidth={2}
-            beamHeight={15}
-            beamNumber={12}
-            lightColor="#ffffff"
-            speed={2}
-            noiseIntensity={1.75}
-            scale={0.2}
-            rotation={0}
-          />
+          <Suspense fallback={null}>
+            <Beams
+              beamWidth={2}
+              beamHeight={15}
+              beamNumber={12}
+              lightColor="#ffffff"
+              speed={2}
+              noiseIntensity={1.75}
+              scale={0.2}
+              rotation={0}
+            />
+          </Suspense>
         </div>
         <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-bg to-transparent pointer-events-none" />
       </div>
