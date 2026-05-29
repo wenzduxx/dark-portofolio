@@ -10,6 +10,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import { LoadingScreen } from './components/LoadingScreen';
 import { Navbar } from './components/Navbar';
 import { Contact } from './components/Contact';
+import { ScrollToTop } from './components/ScrollToTop';
 import Home from './pages/Home';
 import Work from './pages/Work';
 import Resume from './pages/Resume';
@@ -59,6 +60,7 @@ function PortfolioApp() {
 export default function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Analytics />
       <SpeedInsights />
       <Routes>

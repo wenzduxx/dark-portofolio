@@ -11,6 +11,13 @@ export function Navbar() {
   const location = useLocation();
   const { navLinks: NAV_LINKS, siteData } = usePortfolioData();
 
+  const scrollToTopIfSamePath = (path: string) => (e: React.MouseEvent) => {
+    if (location.pathname === path) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    }
+  };
+
   useEffect(() => {
     // Only flip state when crossing the 50-px boundary — avoids invoking the
     // setter on every scroll event and lets the listener stay passive so the
@@ -43,8 +50,9 @@ export function Navbar() {
       >
         <div className="inline-flex items-center px-4 py-2">
           {/* Logo */}
-          <Link 
+          <Link
             to="/"
+            onClick={scrollToTopIfSamePath('/')}
             className="group relative flex items-center justify-center w-9 h-9 rounded-full transition-transform duration-500 hover:scale-110 shrink-0"
           >
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#89AACC] to-[#4E85BF] opacity-50 group-hover:opacity-100 transition-opacity duration-500 [animation:gradient-shift_6s_linear_infinite] group-hover:[animation-direction:reverse]" />
@@ -62,9 +70,10 @@ export function Navbar() {
               <Link
                 key={link.name}
                 to={link.path}
+                onClick={scrollToTopIfSamePath(link.path)}
                 className={`text-xs sm:text-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 transition-all duration-300 relative group/link ${
-                  location.pathname === link.path 
-                    ? 'text-text-primary' 
+                  location.pathname === link.path
+                    ? 'text-text-primary'
                     : 'text-muted hover:text-text-primary'
                 }`}
               >

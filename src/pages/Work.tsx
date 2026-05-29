@@ -163,11 +163,17 @@ export default function Work() {
 
       {/* Full Project Archive */}
       <section className="max-w-[1200px] mx-auto mb-32 relative z-10">
-        <div className="flex items-center gap-3 mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+          viewport={{ once: true, margin: "-80px" }}
+          className="flex items-center gap-3 mb-12"
+        >
            <h2 className="text-xs text-muted uppercase tracking-[0.3em]">Full Portfolio</h2>
            <div className="flex-1 h-px bg-stroke" />
-        </div>
-        
+        </motion.div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8">
           {ALL_PROJECTS.map((project, i) => {
             const patterns = [
@@ -180,18 +186,15 @@ export default function Work() {
             ];
             const pattern = patterns[i % patterns.length];
             return (
-            <motion.div 
+            <div
               key={i}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: i * 0.05 }}
-              viewport={{ once: true }}
               className={`md:col-span-1 ${pattern.span}`}
             >
               <Link
                 to={`/project/${project.id}`}
                 className="group flex flex-col"
               >
+                {/* Image — instant, no scroll animation */}
                 <div className={`w-full overflow-hidden rounded-2xl bg-surface mb-6 relative ${pattern.aspect}`}>
                   <img
                     src={project.image}
@@ -202,7 +205,14 @@ export default function Work() {
                   />
                   <div className="absolute inset-0 bg-bg/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="flex justify-between items-start">
+                {/* Text — scroll reveal */}
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, delay: (i % 4) * 0.06, ease: [0.25, 0.1, 0.25, 1] }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  className="flex justify-between items-start transform-gpu"
+                >
                   <div>
                     <h3 className="text-xl text-text-primary mb-1 group-hover:translate-x-1 transition-transform">{project.title}</h3>
                     <div className="flex items-center gap-2 text-xs text-muted uppercase tracking-wider">
@@ -214,9 +224,9 @@ export default function Work() {
                   <div className="w-10 h-10 rounded-full border border-stroke flex items-center justify-center group-hover:bg-white group-hover:border-white transition-all shrink-0">
                     <ArrowUpRight className="w-4 h-4 text-muted group-hover:text-bg transition-colors" />
                   </div>
-                </div>
+                </motion.div>
               </Link>
-            </motion.div>
+            </div>
           )})}
         </div>
       </section>
@@ -225,25 +235,39 @@ export default function Work() {
       <section className="max-w-[1200px] mx-auto mb-32 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 items-center">
           <div>
-            <h2 className="text-4xl md:text-5xl font-display italic text-text-primary mb-8 tracking-tight">
+            <motion.h2
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
+              viewport={{ once: true, margin: "-80px" }}
+              className="text-4xl md:text-5xl font-display italic text-text-primary mb-8 tracking-tight transform-gpu"
+            >
               Design <span className="text-text-primary/40">Philosophy.</span>
-            </h2>
+            </motion.h2>
             <div className="space-y-12">
               {[
                 { title: "Technical Sincerity", desc: "No fake infrastructure. Every animation, transition, and interaction should reflect the underlying logic of the system." },
                 { title: "Visual Quiet", desc: "Removing the unnecessary until only the essential remains. Clarity over decoration, always." },
                 { title: "Human Nuance", desc: "Digital products shouldn't feel like machines. Adding character through small, thoughtful details." }
               ].map((item, i) => (
-                <div key={i} className="group flex gap-6">
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.15 + i * 0.12, ease: [0.25, 0.1, 0.25, 1] }}
+                  viewport={{ once: true, margin: "-80px" }}
+                  className="group flex gap-6 transform-gpu"
+                >
                   <span className="text-xs text-muted font-mono mt-1">0{i+1}</span>
                   <div>
                     <h3 className="text-lg text-text-primary mb-2">{item.title}</h3>
                     <p className="text-sm text-muted leading-relaxed">{item.desc}</p>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
+          {/* Image card — instant, no fade */}
           <div className="aspect-square bg-surface border border-stroke rounded-[3rem] overflow-hidden relative">
              <img
                src="https://images.unsplash.com/photo-1558655146-23b01c7bc161?auto=format&fit=crop&q=80&w=1000"
@@ -264,15 +288,27 @@ export default function Work() {
       {/* Clients Section */}
       {CLIENTS.length > 0 && (
       <section className="max-w-[1200px] mx-auto pt-20 border-t border-stroke relative z-10">
-        <h2 className="text-xs text-muted uppercase tracking-[0.3em] mb-12 text-center">Trusted By</h2>
+        <motion.h2
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+          viewport={{ once: true, margin: "-80px" }}
+          className="text-xs text-muted uppercase tracking-[0.3em] mb-12 text-center transform-gpu"
+        >
+          Trusted By
+        </motion.h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16">
           {CLIENTS.map((client, i) => (
-            <div 
+            <motion.div
               key={i}
-              className="text-2xl md:text-3xl font-display italic text-muted/30 hover:text-text-primary transition-colors cursor-default text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: i * 0.08, ease: [0.25, 0.1, 0.25, 1] }}
+              viewport={{ once: true, margin: "-60px" }}
+              className="text-2xl md:text-3xl font-display italic text-muted/30 hover:text-text-primary transition-colors cursor-default text-center transform-gpu"
             >
               {client}
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
