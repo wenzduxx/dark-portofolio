@@ -30,6 +30,8 @@ function PortfolioApp() {
 
   return (
     <div className="bg-bg min-h-screen selection:bg-accent selection:text-bg">
+      <ScrollToTop />
+
       {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
 
       {!isLoading && <Navbar />}
