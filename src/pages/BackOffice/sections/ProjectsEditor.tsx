@@ -15,7 +15,8 @@ const emptyProject = () => ({
   problem_title: 'The Problem', problem_content: '',
   solution_title: 'The Solution', solution_content: '',
   methodology_description: '', technical_details: '',
-  outcomes_description: '', is_featured: false, grid_col_span: 'md:col-span-7', sort_order: 0,
+  outcomes_description: '', live_url: '', repo_url: '',
+  is_featured: false, grid_col_span: 'md:col-span-7', sort_order: 0,
 });
 
 export default function ProjectsEditor({ onSaved }: { onSaved?: () => void }) {
@@ -216,6 +217,18 @@ export default function ProjectsEditor({ onSaved }: { onSaved?: () => void }) {
           </BOField>
           <BOField label="Outcomes Description (optional)">
             <BOInput value={form.outcomes_description || ''} onChange={set('outcomes_description')} rows={2} placeholder="The platform redefined..." />
+          </BOField>
+        </div>
+      </BOCard>
+
+      <BOCard>
+        <h3 className="text-sm font-semibold text-[#e5e5e5] mb-4">Project Links</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <BOField label="Live URL (optional)" hint="Shows the 'Live Preview' button">
+            <BOInput value={form.live_url || ''} onChange={set('live_url')} placeholder="https://example.com" />
+          </BOField>
+          <BOField label="Repository URL (optional)" hint="Shows the 'Repository' button">
+            <BOInput value={form.repo_url || ''} onChange={set('repo_url')} placeholder="https://github.com/user/repo" />
           </BOField>
         </div>
       </BOCard>

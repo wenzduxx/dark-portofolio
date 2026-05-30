@@ -24,6 +24,12 @@ export default function AcademicDetail() {
       return;
     }
 
+    // Wait for the loaded content to actually render before wiring up
+    // animations — during the loading render only the spinner is mounted, so
+    // containerRef is null and the selectors below match nothing. The effect
+    // re-runs once `loading` flips to false (it's in the dependency array).
+    if (loading || !academic) return;
+
     const ctx = gsap.context(() => {
       // Intro Text Reveal
       gsap.from(".reveal-text", {
@@ -68,7 +74,7 @@ export default function AcademicDetail() {
       });
 
       // Staggered list items
-      if (document.querySelector('.stagger-list')) {
+      if (gsap.utils.toArray('.stagger-item').length) {
         gsap.from('.stagger-item', {
           y: 30,
           opacity: 0,

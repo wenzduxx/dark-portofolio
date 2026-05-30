@@ -495,6 +495,8 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
             outcomes: (metrics.length > 0 || p.outcomes_description)
               ? { description: p.outcomes_description || '', metrics }
               : undefined,
+            liveUrl: p.live_url || undefined,
+            repoUrl: p.repo_url || undefined,
             visuals,
           };
         }

@@ -22,6 +22,8 @@ export interface Project {
   methodology_description: string | null;
   technical_details: string;
   outcomes_description: string | null;
+  live_url: string | null;
+  repo_url: string | null;
   is_featured: boolean;
   grid_col_span: string;
   sort_order: number;

@@ -31,6 +31,8 @@ export interface ProjectCaseStudy {
     description: string;
     metrics: { label: string; value: string }[];
   };
+  liveUrl?: string;
+  repoUrl?: string;
   visuals: {
     url: string;
     caption: string;

@@ -365,6 +365,7 @@ Every save triggers a Supabase Realtime event &mdash; the public site context re
 2. **Run the migrations** in [`supabase/migrations/`](supabase/migrations/) against your project (either via the Supabase CLI or by pasting them into the SQL editor in order):
    - `20260528_unified_posts.sql`
    - `20260528_background_music.sql`
+   - `20260529_explorations_gallery.sql`
 3. **Create storage buckets** for media uploads. The CMS uploaders expect public buckets named (at minimum) `images` and `audio`. Adjust RLS policies to suit your auth model.
 4. **Create your first user** in **Authentication → Users** &mdash; that&rsquo;s the account you&rsquo;ll log into `/bts-porto` with.
 5. **(Optional) Lock down RLS** so that only authenticated users can write, while `anon` may read public content. The realtime subscriptions in [`PortfolioDataContext.tsx`](src/contexts/PortfolioDataContext.tsx) work fine with read&ndash;only anon access.

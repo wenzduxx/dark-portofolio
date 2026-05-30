@@ -1,0 +1,82 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@theme",
+      "description": "Tailwind CSS v4: define design tokens (colors, fonts, animations, etc.) as CSS variables that generate utility classes.",
+      "references": [
+        { "name": "Tailwind docs", "url": "https://tailwindcss.com/docs/theme" }
+      ]
+    },
+    {
+      "name": "@tailwind",
+      "description": "Tailwind CSS: inject Tailwind's base, components, and utilities styles.",
+      "references": [
+        { "name": "Tailwind docs", "url": "https://tailwindcss.com/docs/functions-and-directives#tailwind" }
+      ]
+    },
+    {
+      "name": "@apply",
+      "description": "Tailwind CSS: inline existing utility classes into custom CSS.",
+      "references": [
+        { "name": "Tailwind docs", "url": "https://tailwindcss.com/docs/functions-and-directives#apply" }
+      ]
+    },
+    {
+      "name": "@layer",
+      "description": "Tailwind CSS / CSS cascade layers: assign rules to base, components, or utilities layers.",
+      "references": [
+        { "name": "Tailwind docs", "url": "https://tailwindcss.com/docs/functions-and-directives#layer" }
+      ]
+    },
+    {
+      "name": "@custom-variant",
+      "description": "Tailwind CSS v4: define a custom variant.",
+      "references": [
+        { "name": "Tailwind docs", "url": "https://tailwindcss.com/docs/functions-and-directives#custom-variant" }
+      ]
+    },
+    {
+      "name": "@variant",
+      "description": "Tailwind CSS v4: apply a variant within custom CSS.",
+      "references": [
+        { "name": "Tailwind docs", "url": "https://tailwindcss.com/docs/functions-and-directives#variant" }
+      ]
+    },
+    {
+      "name": "@utility",
+      "description": "Tailwind CSS v4: register a custom utility class.",
+      "references": [
+        { "name": "Tailwind docs", "url": "https://tailwindcss.com/docs/functions-and-directives#utility" }
+      ]
+    },
+    {
+      "name": "@source",
+      "description": "Tailwind CSS v4: explicitly include source files for class detection.",
+      "references": [
+        { "name": "Tailwind docs", "url": "https://tailwindcss.com/docs/functions-and-directives#source" }
+      ]
+    },
+    {
+      "name": "@reference",
+      "description": "Tailwind CSS v4: reference your theme/config from a separate stylesheet without duplicating output.",
+      "references": [
+        { "name": "Tailwind docs", "url": "https://tailwindcss.com/docs/functions-and-directives#reference" }
+      ]
+    },
+    {
+      "name": "@config",
+      "description": "Tailwind CSS: load a legacy JavaScript-based configuration file.",
+      "references": [
+        { "name": "Tailwind docs", "url": "https://tailwindcss.com/docs/functions-and-directives#config" }
+      ]
+    },
+    {
+      "name": "@plugin",
+      "description": "Tailwind CSS v4: load a Tailwind plugin from CSS.",
+      "references": [
+        { "name": "Tailwind docs", "url": "https://tailwindcss.com/docs/functions-and-directives#plugin" }
+      ]
+    }
+  ]
+}
