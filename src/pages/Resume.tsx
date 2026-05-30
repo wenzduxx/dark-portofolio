@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Link } from 'react-router-dom';
@@ -125,13 +125,14 @@ export default function Resume() {
   // the card flattens to upright while a field is focused so typing stays
   // comfortable. Fields sit raised above the surface via translateZ.
   const [isTyping, setIsTyping] = useState(false);
+  const reduceMotion = useReducedMotion();
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const rotateX = useSpring(useTransform(mouseY, [-300, 300], [8, -8]), { stiffness: 120, damping: 20 });
-  const rotateY = useSpring(useTransform(mouseX, [-300, 300], [-8, 8]), { stiffness: 120, damping: 20 });
+  const rotateX = useSpring(useTransform(mouseY, [-300, 300], [10, -10]), { stiffness: 120, damping: 20 });
+  const rotateY = useSpring(useTransform(mouseX, [-300, 300], [-10, 10]), { stiffness: 120, damping: 20 });
 
   const handleCardMouseMove = (e: React.MouseEvent) => {
-    if (isTyping) return;
+    if (isTyping || reduceMotion) return;
     const rect = e.currentTarget.getBoundingClientRect();
     mouseX.set(e.clientX - rect.left - rect.width / 2);
     mouseY.set(e.clientY - rect.top - rect.height / 2);
@@ -401,7 +402,7 @@ export default function Resume() {
         </div>
 
         {/* Contact Form — glassmorphic 3D-tilt card with raised fields */}
-        <div className="resume-reveal max-w-4xl mx-auto relative z-10" style={{ perspective: 1500 }}>
+        <div className="resume-reveal max-w-4xl mx-auto relative z-10" style={{ perspective: 1000 }}>
         <motion.section
           onMouseMove={handleCardMouseMove}
           onMouseLeave={resetTilt}
@@ -436,7 +437,7 @@ export default function Resume() {
             />
           </div>
 
-          <div className="relative z-10 text-center mb-12" style={{ transform: 'translateZ(60px)' }}>
+          <div className="relative z-10 text-center mb-12" style={{ transform: 'translateZ(25px)' }}>
             <div className="inline-flex p-3 rounded-full bg-stroke/30 mb-6 relative transition-all duration-500 group-focus-within:bg-[#89AACC]/10 group-focus-within:shadow-[0_0_24px_-4px_rgba(137,170,204,0.55)]">
               <Mail className="w-6 h-6 text-text-primary/70 transition-colors duration-500 group-focus-within:text-[#89AACC]" />
             </div>
@@ -445,7 +446,7 @@ export default function Resume() {
           </div>
 
           {/* Status Messages */}
-          <div className="relative z-10" style={{ transform: 'translateZ(40px)' }}>
+          <div className="relative z-10" style={{ transform: 'translateZ(45px)' }}>
           <AnimatePresence mode="wait">
             {formStatus === 'success' && (
               <motion.div
@@ -479,8 +480,8 @@ export default function Resume() {
             onFocus={handleFieldFocus}
             onBlur={handleFieldBlur}
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="space-y-2 group/field" style={{ transform: 'translateZ(40px)' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 [transform-style:preserve-3d]">
+              <div className="space-y-2 group/field [transform:translateZ(60px)] transition-transform duration-300 ease-out group-focus-within/field:[transform:translateZ(88px)]">
                 <label className="text-xs text-muted uppercase tracking-widest ml-4 transition-colors duration-300 group-focus-within/field:text-[#89AACC]">Full Name *</label>
                 <input
                   type="text"
@@ -490,10 +491,10 @@ export default function Resume() {
                   onChange={setField('name')}
                   placeholder="John Doe"
                   required
-                  className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary outline-none shadow-[0_10px_30px_-12px_rgba(0,0,0,0.7)] transition-all duration-300 focus:border-[#89AACC] focus:shadow-[0_0_0_3px_rgba(137,170,204,0.15)]"
+                  className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary outline-none shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07),0_2px_4px_-1px_rgba(0,0,0,0.45),0_10px_20px_-6px_rgba(0,0,0,0.65),0_26px_46px_-14px_rgba(0,0,0,0.7)] transition-all duration-300 focus:border-[#89AACC] focus:shadow-[0_0_0_3px_rgba(137,170,204,0.25),inset_0_1px_0_0_rgba(255,255,255,0.1),0_12px_24px_-6px_rgba(0,0,0,0.65),0_32px_58px_-14px_rgba(0,0,0,0.75)]"
                 />
               </div>
-              <div className="space-y-2 group/field" style={{ transform: 'translateZ(40px)' }}>
+              <div className="space-y-2 group/field [transform:translateZ(60px)] transition-transform duration-300 ease-out group-focus-within/field:[transform:translateZ(88px)]">
                 <label className="text-xs text-muted uppercase tracking-widest ml-4 transition-colors duration-300 group-focus-within/field:text-[#89AACC]">Email Address *</label>
                 <input
                   type="email"
@@ -503,11 +504,11 @@ export default function Resume() {
                   onChange={setField('email')}
                   placeholder="john@example.com"
                   required
-                  className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary outline-none shadow-[0_10px_30px_-12px_rgba(0,0,0,0.7)] transition-all duration-300 focus:border-[#89AACC] focus:shadow-[0_0_0_3px_rgba(137,170,204,0.15)]"
+                  className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary outline-none shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07),0_2px_4px_-1px_rgba(0,0,0,0.45),0_10px_20px_-6px_rgba(0,0,0,0.65),0_26px_46px_-14px_rgba(0,0,0,0.7)] transition-all duration-300 focus:border-[#89AACC] focus:shadow-[0_0_0_3px_rgba(137,170,204,0.25),inset_0_1px_0_0_rgba(255,255,255,0.1),0_12px_24px_-6px_rgba(0,0,0,0.65),0_32px_58px_-14px_rgba(0,0,0,0.75)]"
                 />
               </div>
             </div>
-            <div className="space-y-2 group/field" style={{ transform: 'translateZ(40px)' }}>
+            <div className="space-y-2 group/field [transform:translateZ(60px)] transition-transform duration-300 ease-out group-focus-within/field:[transform:translateZ(88px)]">
                <label className="text-xs text-muted uppercase tracking-widest ml-4 transition-colors duration-300 group-focus-within/field:text-[#89AACC]">Subject</label>
                 <input
                   type="text"
@@ -515,10 +516,10 @@ export default function Resume() {
                   value={formData.subject}
                   onChange={setField('subject')}
                   placeholder="How can I help?"
-                  className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary outline-none shadow-[0_10px_30px_-12px_rgba(0,0,0,0.7)] transition-all duration-300 focus:border-[#89AACC] focus:shadow-[0_0_0_3px_rgba(137,170,204,0.15)]"
+                  className="w-full bg-bg border border-stroke rounded-full px-6 py-4 text-text-primary outline-none shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07),0_2px_4px_-1px_rgba(0,0,0,0.45),0_10px_20px_-6px_rgba(0,0,0,0.65),0_26px_46px_-14px_rgba(0,0,0,0.7)] transition-all duration-300 focus:border-[#89AACC] focus:shadow-[0_0_0_3px_rgba(137,170,204,0.25),inset_0_1px_0_0_rgba(255,255,255,0.1),0_12px_24px_-6px_rgba(0,0,0,0.65),0_32px_58px_-14px_rgba(0,0,0,0.75)]"
                 />
             </div>
-            <div className="space-y-2 group/field" style={{ transform: 'translateZ(40px)' }}>
+            <div className="space-y-2 group/field [transform:translateZ(60px)] transition-transform duration-300 ease-out group-focus-within/field:[transform:translateZ(88px)]">
               <label className="text-xs text-muted uppercase tracking-widest ml-4 transition-colors duration-300 group-focus-within/field:text-[#89AACC]">Message *</label>
               <textarea
                 rows={5}
@@ -527,15 +528,15 @@ export default function Resume() {
                 onChange={setField('message')}
                 placeholder="Tell me about your project..."
                 required
-                className="w-full bg-bg border border-stroke rounded-[2rem] px-6 py-6 text-text-primary outline-none resize-none shadow-[0_10px_30px_-12px_rgba(0,0,0,0.7)] transition-all duration-300 focus:border-[#89AACC] focus:shadow-[0_0_0_3px_rgba(137,170,204,0.15)]"
+                className="w-full bg-bg border border-stroke rounded-[2rem] px-6 py-6 text-text-primary outline-none resize-none shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07),0_2px_4px_-1px_rgba(0,0,0,0.45),0_10px_20px_-6px_rgba(0,0,0,0.65),0_26px_46px_-14px_rgba(0,0,0,0.7)] transition-all duration-300 focus:border-[#89AACC] focus:shadow-[0_0_0_3px_rgba(137,170,204,0.25),inset_0_1px_0_0_rgba(255,255,255,0.1),0_12px_24px_-6px_rgba(0,0,0,0.65),0_32px_58px_-14px_rgba(0,0,0,0.75)]"
               />
             </div>
 
             <HoverButton
               type="submit"
               disabled={formStatus === 'sending'}
-              style={{ transform: 'translateZ(55px)' }}
-              className="w-full py-5 rounded-full text-lg text-text-primary shadow-[0_14px_40px_-12px_rgba(0,0,0,0.8)] transition-transform duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{ transform: 'translateZ(80px)' }}
+              className="w-full py-5 rounded-full text-lg text-text-primary shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_8px_-2px_rgba(0,0,0,0.5),0_18px_36px_-10px_rgba(0,0,0,0.7),0_36px_64px_-16px_rgba(0,0,0,0.7)] transition-all duration-300 hover:scale-[1.02] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_20px_40px_-10px_rgba(0,0,0,0.7),0_40px_70px_-16px_rgba(0,0,0,0.7),0_22px_50px_-12px_rgba(78,133,191,0.45)] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <span className="relative z-10 flex items-center justify-center gap-3">
                 {formStatus === 'sending' ? (
