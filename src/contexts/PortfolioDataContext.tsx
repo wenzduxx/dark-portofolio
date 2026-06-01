@@ -11,6 +11,7 @@ import type { JournalEntry } from '../data/journal';
 import type { ExperienceEntry } from '../data/experience';
 import type { AcademicEntry } from '../data/academic';
 import type { Activity } from '../data/activities';
+import { normalizeBlocks } from '../lib/blocks';
 
 // ─── Types matching original component data shapes ──────────────────────────
 
@@ -186,6 +187,9 @@ interface PortfolioContextType {
   // Explorations.tsx — replaces hardcoded EXPLORATIONS constant
   explorations: { id: string; image: string; col: number }[];
 
+  // Work.tsx — dynamic gallery in the "Design Philosophy" card
+  workGallery: { id: string; image: string; caption: string }[];
+
   loading: boolean;
   error: string | null;
   refetch: () => void;
@@ -303,6 +307,13 @@ const DEFAULT_CONTEXT: PortfolioContextType = {
     { id: '5', image: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=600', col: 1 },
     { id: '6', image: 'https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&q=80&w=600', col: 2 },
   ],
+  workGallery: [
+    { id: 'wg1', image: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?auto=format&fit=crop&q=80&w=1200', caption: 'Editorial layout study' },
+    { id: 'wg2', image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&q=80&w=1200', caption: 'Motion & 3D render' },
+    { id: 'wg3', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200', caption: 'Abstract gradient system' },
+    { id: 'wg4', image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=1200', caption: 'Interface concept' },
+    { id: 'wg5', image: 'https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?auto=format&fit=crop&q=80&w=1200', caption: 'Type & grid exploration' },
+  ],
   loading: true,
   error: null,
   refetch: () => {},
@@ -352,6 +363,7 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         { data: resumeCertifications },
         { data: clientsData },
         { data: explorationsData },
+        { data: workGalleryData },
       ] = await Promise.all([
         supabase.from('site_settings').select('*').single(),
         supabase.from('hero_settings').select('*').single(),
@@ -382,6 +394,7 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         supabase.from('resume_certifications').select('*').order('sort_order'),
         supabase.from('clients').select('*').order('sort_order'),
         supabase.from('explorations_gallery').select('*').order('column_position').order('sort_order'),
+        supabase.from('work_gallery').select('*').order('sort_order'),
       ]);
 
       // ── Hero Settings (was fetched but DISCARDED — now mapped!) ────────────
@@ -498,6 +511,8 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
             liveUrl: p.live_url || undefined,
             repoUrl: p.repo_url || undefined,
             visuals,
+            blocks: normalizeBlocks(p.content_blocks),
+            appearance: p.appearance || null,
           };
         }
       }
@@ -517,6 +532,8 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
           excerpt: p.excerpt,
           content,
           tags,
+          blocks: normalizeBlocks(p.content_blocks),
+          appearance: p.appearance || null,
         };
       }
 
@@ -562,6 +579,8 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
           longDescription: p.long_description,
           impact: p.impact || undefined,
           links: links.length > 0 ? links : undefined,
+          blocks: normalizeBlocks(p.content_blocks),
+          appearance: p.appearance || null,
         };
       }
 
@@ -666,6 +685,11 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         ? explorationsData.map((e: any) => ({ id: e.id, image: e.image_url, col: e.column_position }))
         : DEFAULT_CONTEXT.explorations;
 
+      // ── Work Gallery (Work page "Design Philosophy" card) ─────────────────
+      const workGallery = (workGalleryData && workGalleryData.length > 0)
+        ? workGalleryData.map((w: any) => ({ id: w.id, image: w.image_url, caption: w.caption || '' }))
+        : DEFAULT_CONTEXT.workGallery;
+
       setCtx({
         roles,
         navLinks: resolvedNavLinks,
@@ -687,6 +711,7 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
         resumeData,
         clients,
         explorations,
+        workGallery,
         loading: false,
         error: null,
       });
@@ -712,7 +737,7 @@ export function PortfolioDataProvider({ children }: { children: React.ReactNode 
       'experience_technologies', 'experience_metrics', 'experience_gallery',
       'academics', 'academic_activities', 'academic_metrics', 'academic_gallery',
       'resume_settings', 'resume_skills', 'resume_certifications',
-      'clients', 'explorations_gallery'
+      'clients', 'explorations_gallery', 'work_gallery'
     ];
 
     // Debounce: a single Back Office save typically touches several related

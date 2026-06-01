@@ -3,6 +3,8 @@
  * These match the Supabase table schemas from schema.sql.
  */
 
+import type { Block, Appearance } from './blocks';
+
 export interface Project {
   id: string;
   slug: string;
@@ -27,6 +29,8 @@ export interface Project {
   is_featured: boolean;
   grid_col_span: string;
   sort_order: number;
+  content_blocks: Block[] | null;
+  appearance: Appearance | null;
   created_at: string;
   updated_at: string;
 }

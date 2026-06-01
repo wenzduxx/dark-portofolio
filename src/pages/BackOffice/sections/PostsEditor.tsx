@@ -3,7 +3,12 @@ import { supabase } from '../../../lib/supabase';
 import { BOCard, BOSectionHeader, BOField, BOInput, BOSaveButton, BOAlert, useSaveState } from '../components/BOUtils';
 import ArrayEditor, { PairEditor } from '../components/ArrayEditor';
 import ImageUpload from '../components/ImageUpload';
-import { Plus, Pencil, Trash2, ChevronLeft, Eye } from 'lucide-react';
+import BlockEditor from '../components/BlockEditor';
+import AppearanceEditor from '../components/AppearanceEditor';
+import { Plus, Pencil, Trash2, ChevronLeft, Eye, Wand2 } from 'lucide-react';
+import type { Block, Appearance } from '../../../lib/blocks';
+import { freshId } from '../components/blockDefaults';
+import { normalizeBlocks } from '../../../lib/blocks';
 
 type Kind = 'journal' | 'activity';
 type Mode = 'list' | 'edit' | 'create';
@@ -25,6 +30,8 @@ interface Post {
   status: string | null;
   long_description: string | null;
   impact: string | null;
+  content_blocks?: Block[] | null;
+  appearance?: Appearance | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -66,6 +73,8 @@ export default function PostsEditor({ onSaved }: { onSaved?: () => void }) {
   const [paragraphs, setParagraphs] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [links, setLinks] = useState<{ label: string; value: string }[]>([]);
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [appearance, setAppearance] = useState<Appearance | null>(null);
   const { saving, saved, error, withSave } = useSaveState();
 
   const load = async () => {
@@ -92,12 +101,16 @@ export default function PostsEditor({ onSaved }: { onSaved?: () => void }) {
     setParagraphs([]);
     setTags([]);
     setLinks([]);
+    setBlocks([]);
+    setAppearance(null);
     setMode('create');
   };
 
   const openEdit = async (post: Post) => {
     setSelected(post);
     setForm({ ...post, category: post.category || '', reading_time: post.reading_time || '', activity_type: post.activity_type || '', status: post.status || '', long_description: post.long_description || '', impact: post.impact || '' });
+    setBlocks(normalizeBlocks(post.content_blocks));
+    setAppearance(post.appearance || null);
     if (post.kind === 'journal') {
       const [c, t] = await Promise.all([
         supabase.from('post_paragraphs').select('*').eq('post_id', post.id).order('sort_order'),
@@ -153,6 +166,8 @@ export default function PostsEditor({ onSaved }: { onSaved?: () => void }) {
       status: kind === 'activity' ? (form.status || null) : null,
       long_description: kind === 'activity' ? (form.long_description || null) : null,
       impact: kind === 'activity' ? (form.impact || null) : null,
+      content_blocks: blocks,
+      appearance: appearance,
       updated_at: new Date().toISOString(),
     };
 
@@ -249,6 +264,22 @@ export default function PostsEditor({ onSaved }: { onSaved?: () => void }) {
 
   const isJournal = form.kind === 'journal';
   const isActivity = form.kind === 'activity';
+
+  const legacySource = isJournal
+    ? paragraphs.filter(Boolean).length > 0
+    : !!(form.long_description || form.impact);
+
+  const importLegacy = () => {
+    const imported: Block[] = [];
+    if (isJournal) {
+      paragraphs.filter(Boolean).forEach((p) => imported.push({ id: freshId(), type: 'paragraph', text: p }));
+    } else {
+      if (form.long_description) imported.push({ id: freshId(), type: 'paragraph', text: form.long_description });
+      if (form.impact)
+        imported.push({ id: freshId(), type: 'callout', variant: 'impact', title: 'Impact & Outcomes', text: form.impact });
+    }
+    setBlocks([...blocks, ...imported]);
+  };
 
   return (
     <div className="space-y-6">
@@ -412,6 +443,33 @@ export default function PostsEditor({ onSaved }: { onSaved?: () => void }) {
           </BOCard>
         </>
       )}
+
+      <BOCard>
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h3 className="text-sm font-semibold text-[#e5e5e5]">Flexible Content Blocks</h3>
+            <p className="text-xs text-[#555] mt-1">
+              Compose the page freely — headings, rich paragraphs, images, galleries, code, callouts and more.
+              {blocks.length > 0 ? ' These render instead of the simple fields above.' : ''}
+            </p>
+          </div>
+          {legacySource && (
+            <button
+              onClick={importLegacy}
+              className="flex items-center gap-1.5 text-xs text-[#888] hover:text-[#84CC16] transition-colors shrink-0"
+              title="Append the simple fields above as editable blocks"
+            >
+              <Wand2 className="w-3.5 h-3.5" /> Import existing text
+            </button>
+          )}
+        </div>
+        <BlockEditor value={blocks} onChange={setBlocks} bucket={isJournal ? 'journal' : 'activities'} label="" />
+      </BOCard>
+
+      <BOCard>
+        <h3 className="text-sm font-semibold text-[#e5e5e5] mb-4">Appearance</h3>
+        <AppearanceEditor value={appearance} onChange={setAppearance} headerStyle={isJournal} decor={isActivity} />
+      </BOCard>
 
       <BOSaveButton
         onClick={handleSave}

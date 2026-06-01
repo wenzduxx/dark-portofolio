@@ -1,3 +1,5 @@
+import type { Block, Appearance } from '../lib/blocks';
+
 export interface JournalEntry {
   id: string;
   title: string;
@@ -6,8 +8,10 @@ export interface JournalEntry {
   readingTime: string;
   heroImage: string;
   excerpt: string;
-  content: string[]; // Divided into paragraphs or sections
+  content: string[]; // Legacy plain paragraphs (fallback when `blocks` is empty)
   tags: string[];
+  blocks?: Block[]; // Flexible content blocks (primary when present)
+  appearance?: Appearance | null;
 }
 
 export const JOURNAL_ENTRIES: Record<string, JournalEntry> = {

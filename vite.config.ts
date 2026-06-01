@@ -30,6 +30,7 @@ export default defineConfig(({mode}) => {
             'three': ['three', '@react-three/fiber', '@react-three/drei'],
             'motion': ['framer-motion', 'gsap'],
             'supabase': ['@supabase/supabase-js'],
+            'markdown': ['react-markdown', 'remark-gfm'],
           },
         },
       },

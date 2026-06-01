@@ -3,6 +3,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ExternalLink, Zap, Info } from 'lucide-react';
 import { usePortfolioData } from '../contexts/PortfolioDataContext';
+import { hexToHslChannels } from '../lib/blocks';
+import BlockRenderer from '../components/blocks/BlockRenderer';
 
 export default function ActivityDetail() {
   const { id } = useParams<{ id: string }>();
@@ -25,11 +27,19 @@ export default function ActivityDetail() {
 
   if (!activity) return null;
 
+  // ── Appearance (optional) ───────────────────────────────────────────────
+  const ap = activity.appearance || null;
+  const accentChannels = ap?.accentColor ? hexToHslChannels(ap.accentColor) : null;
+  const rootStyle = accentChannels ? ({ ['--accent']: accentChannels } as React.CSSProperties) : undefined;
+  const widthClass = ap?.contentWidth === 'wide' ? 'max-w-[1200px]' : 'max-w-[1000px]';
+  const showDecor = ap?.showDecor !== false;
+  const hasBlocks = !!(activity.blocks && activity.blocks.length > 0);
+
   return (
-    <div className="bg-bg min-h-screen pt-32 pb-40">
-      <div className="max-w-[1000px] mx-auto px-6">
-        <Link 
-          to="/resume" 
+    <div className="bg-bg min-h-screen pt-32 pb-40" style={rootStyle}>
+      <div className={`${widthClass} mx-auto px-6`}>
+        <Link
+          to="/resume"
           className="inline-flex items-center gap-2 text-muted hover:text-text-primary transition-colors mb-16 group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
@@ -39,15 +49,11 @@ export default function ActivityDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           {/* Header Info */}
           <div className="lg:col-span-12">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-            >
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
               <div className="flex items-center gap-3 text-xs font-mono text-muted uppercase tracking-widest mb-6">
                 <span className="flex items-center gap-2 text-accent">
-                   <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                   {activity.type}
+                  <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                  {activity.type}
                 </span>
                 <span className="w-8 h-px bg-stroke" />
                 {activity.status}
@@ -65,20 +71,25 @@ export default function ActivityDetail() {
                 <Info className="w-4 h-4 text-muted" />
                 <h2 className="text-xs text-muted uppercase tracking-[0.3em]">Full Context</h2>
               </div>
-              <p className="text-2xl text-text-primary/90 leading-relaxed font-light italic mb-12">
-                {activity.longDescription}
-              </p>
-              
-              {activity.impact && (
-                <div className="p-8 bg-bg/50 rounded-2xl border border-stroke">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Zap className="w-4 h-4 text-accent" />
-                    <h3 className="text-xs text-muted uppercase tracking-widest">Impact & Outcomes</h3>
-                  </div>
-                  <p className="text-muted leading-relaxed">
-                    {activity.impact}
+
+              {hasBlocks ? (
+                <BlockRenderer blocks={activity.blocks} />
+              ) : (
+                <>
+                  <p className="text-2xl text-text-primary/90 leading-relaxed font-light italic mb-12">
+                    {activity.longDescription}
                   </p>
-                </div>
+
+                  {activity.impact && (
+                    <div className="p-8 bg-bg/50 rounded-2xl border border-stroke">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Zap className="w-4 h-4 text-accent" />
+                        <h3 className="text-xs text-muted uppercase tracking-widest">Impact & Outcomes</h3>
+                      </div>
+                      <p className="text-muted leading-relaxed">{activity.impact}</p>
+                    </div>
+                  )}
+                </>
               )}
             </section>
           </div>
@@ -89,30 +100,32 @@ export default function ActivityDetail() {
               <div className="p-8 rounded-[2rem] border border-white/5 bg-white/[0.02]">
                 <h3 className="text-xs text-muted uppercase tracking-[0.2em] mb-6">Details</h3>
                 <div className="space-y-6">
-                   <div>
-                     <div className="text-[10px] text-muted uppercase mb-1">Timeline</div>
-                     <div className="text-text-primary">{activity.date}</div>
-                   </div>
-                   {activity.links && activity.links.length > 0 && (
-                     <div>
-                       <div className="text-[10px] text-muted uppercase mb-3">Resources</div>
-                       <div className="space-y-3">
-                         {activity.links.map(link => (
-                           <a key={link.label} href={link.url} className="flex items-center gap-2 text-sm text-text-primary hover:text-accent transition-colors">
-                             {link.label} <ExternalLink className="w-3 h-3" />
-                           </a>
-                         ))}
-                       </div>
-                     </div>
-                   )}
+                  <div>
+                    <div className="text-[10px] text-muted uppercase mb-1">Timeline</div>
+                    <div className="text-text-primary">{activity.date}</div>
+                  </div>
+                  {activity.links && activity.links.length > 0 && (
+                    <div>
+                      <div className="text-[10px] text-muted uppercase mb-3">Resources</div>
+                      <div className="space-y-3">
+                        {activity.links.map(link => (
+                          <a key={link.label} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-text-primary hover:text-accent transition-colors">
+                            {link.label} <ExternalLink className="w-3 h-3" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Decorative graphic */}
-              <div className="aspect-square rounded-[2rem] overflow-hidden bg-gradient-to-br from-white/5 to-transparent border border-white/5 flex items-center justify-center p-12">
-                 <div className="w-full h-full rounded-full border border-stroke opacity-20 animate-[spin_10s_linear_infinite]" />
-                 <div className="absolute w-1/2 h-1/2 rounded-full border border-accent opacity-40 animate-[spin_6s_linear_infinite_reverse]" />
-              </div>
+              {showDecor && (
+                <div className="aspect-square rounded-[2rem] overflow-hidden bg-gradient-to-br from-white/5 to-transparent border border-white/5 flex items-center justify-center p-12 relative">
+                  <div className="w-full h-full rounded-full border border-stroke opacity-20 animate-[spin_10s_linear_infinite]" />
+                  <div className="absolute w-1/2 h-1/2 rounded-full border border-accent opacity-40 animate-[spin_6s_linear_infinite_reverse]" />
+                </div>
+              )}
             </div>
           </div>
         </div>

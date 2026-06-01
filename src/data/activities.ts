@@ -1,3 +1,5 @@
+import type { Block, Appearance } from '../lib/blocks';
+
 export interface Activity {
   id: string;
   title: string;
@@ -8,6 +10,8 @@ export interface Activity {
   longDescription: string;
   impact?: string;
   links?: { label: string; url: string }[];
+  blocks?: Block[]; // Flexible content blocks (primary when present)
+  appearance?: Appearance | null;
 }
 
 export const ACTIVITIES: Record<string, Activity> = {
