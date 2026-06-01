@@ -3,8 +3,12 @@ import { supabase } from '../../../lib/supabase';
 import { BOCard, BOSectionHeader, BOField, BOInput, BOSaveButton, BOAlert, useSaveState } from '../components/BOUtils';
 import ArrayEditor, { PairEditor } from '../components/ArrayEditor';
 import ImageUpload from '../components/ImageUpload';
+import BlockEditor from '../components/BlockEditor';
+import AppearanceEditor from '../components/AppearanceEditor';
 import { Plus, Pencil, Trash2, ChevronLeft, Eye } from 'lucide-react';
 import type { Project } from '../../../lib/types';
+import type { Block, Appearance } from '../../../lib/blocks';
+import { normalizeBlocks } from '../../../lib/blocks';
 
 type Mode = 'list' | 'edit' | 'create';
 
@@ -28,6 +32,8 @@ export default function ProjectsEditor({ onSaved }: { onSaved?: () => void }) {
   const [phases, setPhases] = useState<{ name: string; description: string }[]>([]);
   const [metrics, setMetrics] = useState<{ label: string; value: string }[]>([]);
   const [visuals, setVisuals] = useState<{ url: string; caption: string }[]>([]);
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [appearance, setAppearance] = useState<Appearance | null>(null);
   const { saving, saved, error, withSave, setError } = useSaveState();
 
   const loadProjects = async () => {
@@ -50,6 +56,8 @@ export default function ProjectsEditor({ onSaved }: { onSaved?: () => void }) {
     setPhases((ph.data || []).map(p => ({ name: p.name, description: p.description })));
     setMetrics((me.data || []).map(m => ({ label: m.label, value: m.value })));
     setVisuals((vi.data || []).map(v => ({ url: v.url, caption: v.caption })));
+    setBlocks(normalizeBlocks((p as any).content_blocks));
+    setAppearance((p as any).appearance || null);
     setMode('edit');
   };
 
@@ -57,6 +65,7 @@ export default function ProjectsEditor({ onSaved }: { onSaved?: () => void }) {
     setSelected(null);
     setForm(emptyProject());
     setTechStack([]); setPhases([]); setMetrics([]); setVisuals([]);
+    setBlocks([]); setAppearance(null);
     setMode('create');
   };
 
@@ -77,7 +86,7 @@ export default function ProjectsEditor({ onSaved }: { onSaved?: () => void }) {
   };
 
   const handleSave = () => withSave(async () => {
-    const payload = { ...form, updated_at: new Date().toISOString() };
+    const payload = { ...form, content_blocks: blocks, appearance, updated_at: new Date().toISOString() };
     if (mode === 'create') {
       const { data, error: err } = await supabase.from('projects').insert(payload).select().single();
       if (err) throw err;
@@ -283,6 +292,19 @@ export default function ProjectsEditor({ onSaved }: { onSaved?: () => void }) {
           className="flex items-center gap-1.5 text-xs text-[#84CC16] hover:text-[#a0e040]">
           <Plus className="w-3.5 h-3.5" /> Add visual
         </button>
+      </BOCard>
+
+      <BOCard>
+        <h3 className="text-sm font-semibold text-[#e5e5e5] mb-1">Extended Content / Deep Dive</h3>
+        <p className="text-xs text-[#555] mb-4">
+          Optional free-form blocks rendered after the gallery — add code/source, extra galleries, callouts, embeds, stats and more. The curated case-study sections above stay intact.
+        </p>
+        <BlockEditor value={blocks} onChange={setBlocks} bucket="projects" label="" />
+      </BOCard>
+
+      <BOCard>
+        <h3 className="text-sm font-semibold text-[#e5e5e5] mb-4">Appearance</h3>
+        <AppearanceEditor value={appearance} onChange={setAppearance} headerStyle={false} decor={false} />
       </BOCard>
 
       <BOSaveButton onClick={handleSave} loading={saving} saved={saved} label={mode === 'create' ? 'Create Project' : 'Save Changes'} />

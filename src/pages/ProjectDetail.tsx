@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 import gsap from 'gsap';
@@ -7,6 +8,8 @@ import { ArrowLeft, ArrowUpRight, ArrowRight, Github, Globe, CheckCircle2, Maxim
 import { usePortfolioData } from '../contexts/PortfolioDataContext';
 import CountUp from '../components/CountUp';
 import Lightbox from '../components/Lightbox';
+import BlockRenderer from '../components/blocks/BlockRenderer';
+import { hexToHslChannels } from '../lib/blocks';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -151,8 +154,12 @@ export default function ProjectDetail() {
     { label: 'Role', value: project.role },
   ];
 
+  const accentChannels = project.appearance?.accentColor ? hexToHslChannels(project.appearance.accentColor) : null;
+  const rootStyle = accentChannels ? ({ ['--accent']: accentChannels } as CSSProperties) : undefined;
+  const hasBlocks = !!(project.blocks && project.blocks.length > 0);
+
   return (
-    <div ref={containerRef} className="bg-bg min-h-screen">
+    <div ref={containerRef} className="bg-bg min-h-screen" style={rootStyle}>
       {/* Hero Section */}
       <section className="relative h-screen w-full overflow-hidden flex items-end">
         <motion.div style={heroStyle} className="absolute inset-0 z-0">
@@ -453,6 +460,19 @@ export default function ProjectDetail() {
                   </div>
                 </button>
               ))}
+            </div>
+          </section>
+        )}
+
+        {/* Extended / Deep-dive flexible content blocks */}
+        {hasBlocks && (
+          <section className="pb-32 fade-up-section">
+            <div className="flex items-center gap-3 mb-12">
+              <span className="text-xs text-muted font-mono bg-stroke/30 px-2 py-1 rounded">07</span>
+              <h2 className="text-xs text-muted uppercase tracking-[0.3em]">Deep Dive</h2>
+            </div>
+            <div className="max-w-[900px]">
+              <BlockRenderer blocks={project.blocks} />
             </div>
           </section>
         )}

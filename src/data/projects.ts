@@ -1,3 +1,5 @@
+import type { Block, Appearance } from '../lib/blocks';
+
 export interface ProjectCaseStudy {
   id: string;
   title: string;
@@ -37,6 +39,8 @@ export interface ProjectCaseStudy {
     url: string;
     caption: string;
   }[];
+  blocks?: Block[]; // Optional flexible "extended" content section
+  appearance?: Appearance | null;
 }
 
 export const DETAILED_PROJECTS: Record<string, ProjectCaseStudy> = {

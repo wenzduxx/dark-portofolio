@@ -6,13 +6,14 @@ import { Link } from 'react-router-dom';
 import { ArrowUpRight, Minus, ArrowRight } from 'lucide-react';
 import { BeamsBackground } from '../components/ui/beams-background';
 import { usePortfolioData } from '../contexts/PortfolioDataContext';
+import WorkGallery from '../components/WorkGallery';
 
 gsap.registerPlugin(ScrollTrigger);
 
 
 
 export default function Work() {
-  const { allProjects: ALL_PROJECTS, experienceList, activitiesList, clients: CLIENTS } = usePortfolioData();
+  const { allProjects: ALL_PROJECTS, experienceList, activitiesList, clients: CLIENTS, workGallery } = usePortfolioData();
   const EXPERIENCE_LIST = experienceList;
   const ACTIVITIES_LIST = activitiesList;
   const pageRef = useRef<HTMLDivElement>(null);
@@ -267,21 +268,8 @@ export default function Work() {
               ))}
             </div>
           </div>
-          {/* Image card — instant, no fade */}
-          <div className="aspect-square bg-surface border border-stroke rounded-[3rem] overflow-hidden relative">
-             <img
-               src="https://images.unsplash.com/photo-1558655146-23b01c7bc161?auto=format&fit=crop&q=80&w=1000"
-               alt=""
-               loading="lazy"
-               decoding="async"
-               className="w-full h-full object-cover mix-blend-luminosity opacity-40"
-             />
-             <div className="absolute inset-0 flex items-center justify-center p-12">
-                <div className="text-center">
-                  <div className="text-[120px] font-display italic text-text-primary/10 select-none">WP</div>
-                </div>
-             </div>
-          </div>
+          {/* Dynamic, backoffice-editable gallery */}
+          <WorkGallery images={workGallery} />
         </div>
       </section>
 
